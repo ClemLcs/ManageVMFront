@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des machines virtuelles{% endblock %}
+
+{# Add PicoCSS from CDN into the stylesheets block of base layout #}
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css">
+    <style>
+        .vm-status-running { color: #039; font-weight: 600; }
+        .vm-status-stopped { color: #c00; font-weight: 600; }
+        .container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+        .actions a { margin-right: 0.5rem; }
+        /* Override PicoCSS muted/lead grey text to black */
+        .muted,
+        .lead,
+        .muted a,
+        .lead a,
+        .muted small {
+            color: #ffffffff !important;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<main class="container">
+    <header>
+        <hgroup>
+            <h1>Machines virtuelles</h1>
+            <p class="lead">Gestion et aperçu rapide des machines virtuelles</p>
+        </hgroup>
+    </header>
+
+    <section>
+        <nav class="row">
+            <div class="col-12 col-md-6">
+                <form method="get">
+                    <label for="q">Rechercher</label>
+                    <input id="q" name="q" type="search" placeholder="Nom, IP...">
+                </form>
+            </div>
+            <div class="col-12 col-md-6 align-right">
+                <a class="contrast" href="#">Créer une VM</a>
+            </div>
+        </nav>
+
+        {% if vms is empty %}
+            <p>Aucune machine virtuelle trouvée.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>IP</th>
+                        <th>CPU</th>
+                        <th>RAM</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vm in vms %}
+                        <tr>
+                            <td>{{ vm.name }}</td>
+                            <td>{{ vm.ip }}</td>
+                            <td>{{ vm.cpu }}</td>
+                            <td>{{ vm.ram }}</td>
+                            <td>
+                                {% if vm.status == 'running' %}
+                                    <span class="vm-status-running">En cours</span>
+                                {% else %}
+                                    <span class="vm-status-stopped">Arrêtée</span>
+                                {% endif %}
+                            </td>
+                            <td class="actions">
+                                <a class="secondary" href="#">Détails</a>
+                                {% if vm.status == 'running' %}
+                                    <a class="danger" href="#">Arrêter</a>
+                                {% else %}
+                                    <a class="primary" href="#">Démarrer</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
+
+    <footer>
+        <p class="muted">Contrôleur: {{ controller_name }}</p>
+    </footer>
+</main>
+{% endblock %}
