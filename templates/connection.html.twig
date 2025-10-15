@@ -117,24 +117,56 @@
         <p>Accédez à votre espace VM. <br> Utilisez vos identifiants.</p>
       </article>
 
-      {# Bloc formulaire  #}
-      <article class="block">
-        <h2>Me connecter</h2>
-        <form method="post" novalidate>
+    {% set error = error|default(null) %}
+    {% set last_username = last_username|default('') %}
 
-          <input placeholder="Adresse e-mail" type="email" id="email" name="email" required autofocus />
-
-          <input placeholder="Mot de passe" type="password" id="password" name="password" required />
-
-          <div class="actions">
-            <button type="submit">Me connecter</button>
-            
-            {# À créer  #}
-            <a role="button" class="outline secondary" href="/forgeten_password">Mot de passe oublié</a>
-            <a role="button" class="outline secondary" href="/inscription">S'inscrire</a>
-          </div>
-        </form>
+      {# erreurs d'auth #}
+    {% if error %}
+      <article class="contrast" role="alert">
+        {{ error.messageKey|trans(error.messageData, 'security') }}
       </article>
+    {% endif %}
+
+    <article class="block">
+      <h2>Me connecter</h2>
+
+      <form method="post" action="{{ path('app_login') }}" novalidate>
+        <input
+          placeholder="Adresse e-mail"
+          type="email"
+          id="email"
+          name="email"
+          value="{{ last_username|default('') }}"
+          autocomplete="username"
+          required
+          autofocus
+        >
+
+        <input
+          placeholder="Mot de passe"
+          type="password"
+          id="password"
+          name="password"
+          autocomplete="current-password"
+          required
+        >
+
+        {# CSRF requis par Symfony Security #}
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+        {# Optionnel : remember me #}
+        <label>
+          <input type="checkbox" name="_remember_me" value="on"> Se souvenir de moi
+        </label>
+
+        <div class="actions">
+          <button type="submit">Me connecter</button>
+          <a role="button" class="outline secondary" href="/forgeten_password">Mot de passe oublié</a>
+          <a role="button" class="outline secondary" href="/inscription">S'inscrire</a>
+        </div>
+      </form>
+    </article>
+
 
       {# Bloc “Se connecter” autrement #}
       <article class="block">
