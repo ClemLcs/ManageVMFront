@@ -1,3 +1,54 @@
+/* Global app stylesheet for the VM list page */
+
+/* Page background (set to white for good contrast) */
 body {
-    background-color: rgb(45, 45, 45);
+    background-color: #fff;
+    color: #000;
 }
+
+/* Pico overrides and page-specific styles */
+.vm-status-running { color: #039; font-weight: 600; }
+.vm-status-stopped { color: #c00; font-weight: 600; }
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.actions a { margin-right: 0.5rem; }
+
+/* Make muted/lead text black across the app */
+.muted,
+.lead,
+.muted a,
+.lead a,
+.muted small { color: #000 !important; }
+
+/* Global text color to ensure readability */
+html, body, p, a, small, label, th, td, h1, h2, h3, h4, h5, h6 {
+    color: #000 !important;
+}
+
+/* Form elements and placeholders */
+input, textarea, select, button { color: #000 !important; }
+::placeholder { color: #000 !important; opacity: 1; }
+
+/* Search input: white text + dark background for contrast */
+#q,
+input[type="search"] {
+    color: #fff !important;
+    background-color: #1f2937; /* dark grey-blue */
+    border: 1px solid #374151;
+    padding: 0.4rem 0.6rem;
+}
+
+#q::placeholder,
+input[type="search"]::placeholder {
+    color: rgba(255,255,255,0.75) !important;
+}
+
+/* Add a right-aligned search icon inside the input without overlapping text */
+input[type="search"] {
+    /* No background icon any more */
+    padding-right: 0.6rem;
+}
+
+/* If layout uses RTL or different scaling, ensure icon remains visible */
+input[type="search"]::-ms-clear { display: none; }
+
+
