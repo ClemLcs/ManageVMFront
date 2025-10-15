@@ -2,24 +2,6 @@
 
 {% block title %}Liste des machines virtuelles{% endblock %}
 
-{# Add PicoCSS from CDN into the stylesheets block of base layout #}
-{% block stylesheets %}
-    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css">
-    <style>
-        .vm-status-running { color: #039; font-weight: 600; }
-        .vm-status-stopped { color: #c00; font-weight: 600; }
-        .container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
-        .actions a { margin-right: 0.5rem; }
-        /* Override PicoCSS muted/lead grey text to black */
-        .muted,
-        .lead,
-        .muted a,
-        .lead a,
-        .muted small {
-            color: #ffffffff !important;
-        }
-    </style>
-{% endblock %}
 
 {% block body %}
 <main class="container">
@@ -90,4 +72,39 @@
         <p class="muted">Contrôleur: {{ controller_name }}</p>
     </footer>
 </main>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function() {
+            const REFRESH_INTERVAL_MS = 30000;
+            let refreshTimer = null;
+
+            function startTimer() {
+                if (refreshTimer) return;
+                refreshTimer = setInterval(() => {
+                    if (document.visibilityState === 'visible') {
+                        window.location.reload();
+                    }
+                }, REFRESH_INTERVAL_MS);
+            }
+
+            function stopTimer() {
+                if (!refreshTimer) return;
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    startTimer();
+                } else {
+                    stopTimer();
+                }
+            });
+
+            if (document.visibilityState === 'visible') startTimer();
+        })();
+    </script>
 {% endblock %}
