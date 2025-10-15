@@ -249,14 +249,14 @@
                                 <span class="vm-status-stopped">● Arrêtée</span>
                             {% endif %}
                         </td>
-                        <td class="actions">
-                            <a class="secondary" href="{{ path('app_vm_details', {'id': vm.id}) }}">Détails</a>
-                            {% if vm.status == 'running' %}
-                                <a class="danger" href="#">Arrêter</a>
-                            {% else %}
-                                <a class="primary" href="#">Démarrer</a>
-                            {% endif %}
-                        </td>
+                            <td class="actions">
+                                <a class="secondary" href="{{ path('app_vm_details', {'vmid': vm.id}) }}">Détails</a>
+                                {% if vm.status == 'running' %}
+                                    <a class="danger" href="#">Arrêter</a>
+                                {% else %}
+                                    <a class="primary" href="#">Démarrer</a>
+                                {% endif %}
+                            </td>
                     </tr>
                 {% endfor %}
             </tbody>

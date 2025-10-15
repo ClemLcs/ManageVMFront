@@ -294,6 +294,7 @@
         {% endblock %}
 
         {% block javascripts %}
+            <script src="{{ asset('assets/api-service.js') }}"></script>
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
     </head>
