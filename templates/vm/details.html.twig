@@ -1,0 +1,844 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ vm.name }}{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        /* Container principal */
+        .vm-details-wrapper {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        /* Force box-sizing on all elements */
+        .vm-details-wrapper *,
+        .vm-details-wrapper *::before,
+        .vm-details-wrapper *::after {
+            box-sizing: border-box;
+        }
+
+        /* Back button */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            margin-bottom: 1rem;
+            color: var(--primary-600);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.375rem 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.8125rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary-700);
+            background: var(--primary-50);
+        }
+
+        /* VM Info Card */
+        .vm-info-card {
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%);
+            color: white;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-md);
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .vm-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .vm-info-title h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .vm-status-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .vm-status-badge.running {
+            background: rgba(16, 185, 129, 0.9);
+        }
+
+        .vm-status-badge.stopped {
+            background: rgba(239, 68, 68, 0.9);
+        }
+
+        .vm-specs {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+            max-width: 100%;
+        }
+
+        .vm-spec-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .vm-spec-label {
+            font-size: 0.625rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .vm-spec-value {
+            font-size: 0.9375rem;
+            font-weight: 700;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .tab-nav {
+            display: flex;
+            background: var(--gray-50);
+            border-bottom: 2px solid var(--border-color);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-nav::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .tab-nav::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 3px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--primary-600);
+            border-bottom-color: var(--primary-600);
+        }
+
+        .tab-content-wrapper {
+            padding: 1rem;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .tab-pane {
+            display: none;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Stats Grid for Summary */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            max-width: 100%;
+        }
+
+        .stat-card {
+            background: var(--gray-50);
+            padding: 0.875rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .stat-icon {
+            font-size: 1.375rem;
+            margin-bottom: 0.375rem;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.625rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .stat-unit {
+            font-size: 0.6875rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Mini charts */
+        .mini-charts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+            max-width: 100%;
+        }
+
+        .mini-chart {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .mini-chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .mini-chart-title {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-transform: uppercase;
+        }
+
+        .mini-chart-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        .chart-canvas-wrapper {
+            position: relative;
+            height: 80px;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .mini-chart canvas {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100%;
+        }
+
+        /* Console */
+        .console-wrapper {
+            background: var(--gray-900);
+            border-radius: 8px;
+            border: 1px solid var(--gray-700);
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .console-toolbar {
+            background: var(--gray-800);
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--gray-700);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .console-toolbar button {
+            background: var(--gray-700);
+            border: none;
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.6875rem;
+            cursor: pointer;
+        }
+
+        .console-screen {
+            padding: 1rem;
+            height: 200px;
+            overflow-y: auto;
+            background: var(--gray-900);
+            color: #4ade80;
+            font-family: 'Consolas', monospace;
+            font-size: 0.75rem;
+            line-height: 1.5;
+        }
+
+        /* Compact Table */
+        .compact-table-wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .compact-table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+
+        .compact-table thead {
+            background: var(--gray-50);
+            position: sticky;
+            top: 0;
+        }
+
+        .compact-table th {
+            padding: 0.625rem 0.75rem;
+            text-align: left;
+            font-size: 0.625rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .compact-table td {
+            padding: 0.625rem 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .compact-table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.625rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-info { background: var(--primary-600); color: white; }
+        .badge-success { background: var(--success); color: white; }
+        .badge-warning { background: var(--warning); color: white; }
+
+        /* Action buttons in tables */
+        .table-actions {
+            display: flex;
+            gap: 0.375rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.6875rem;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-danger {
+            background: var(--danger-light);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+        }
+
+        .btn-primary {
+            background: var(--primary-600);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-700);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .vm-info-card {
+                padding: 1rem;
+            }
+
+            .vm-info-header {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .vm-info-title h1 {
+                font-size: 1.25rem;
+            }
+
+            .vm-specs {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .mini-charts {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-btn {
+                padding: 0.625rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            .tab-content-wrapper {
+                padding: 0.75rem;
+            }
+
+            .console-screen {
+                height: 180px;
+                font-size: 0.6875rem;
+            }
+            
+            .compact-table {
+                min-width: 500px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .vm-specs {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .stat-card {
+                padding: 0.625rem;
+            }
+            
+            .stat-icon {
+                font-size: 1.25rem;
+            }
+            
+            .stat-value {
+                font-size: 1.25rem;
+            }
+
+            .compact-table {
+                font-size: 0.6875rem;
+                min-width: 450px;
+            }
+
+            .compact-table th,
+            .compact-table td {
+                padding: 0.5rem;
+            }
+
+            .chart-canvas-wrapper {
+                height: 70px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="vm-details-wrapper">
+    <a href="{{ path('app_list_v_ms') }}" class="back-link">← Retour</a>
+
+    {# VM Info Card #}
+    <div class="vm-info-card">
+        <div class="vm-info-header">
+            <div class="vm-info-title">
+                <h1>{{ vm.name }}</h1>
+            </div>
+            <div>
+                {% if vm.status == 'running' %}
+                    <span class="vm-status-badge running">● En cours</span>
+                {% else %}
+                    <span class="vm-status-badge stopped">● Arrêtée</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="vm-specs">
+            <div class="vm-spec-item">
+                <div class="vm-spec-label">IP</div>
+                <div class="vm-spec-value">{{ vm.ip }}</div>
+            </div>
+            <div class="vm-spec-item">
+                <div class="vm-spec-label">CPU</div>
+                <div class="vm-spec-value">{{ vm.cpu }} vCPU</div>
+            </div>
+            <div class="vm-spec-item">
+                <div class="vm-spec-label">RAM</div>
+                <div class="vm-spec-value">{{ vm.ram }}</div>
+            </div>
+            <div class="vm-spec-item">
+                <div class="vm-spec-label">Action</div>
+                <div class="vm-spec-value">
+                    {% if vm.status == 'running' %}
+                        <button class="btn-sm btn-danger" style="margin-top: 0.25rem;">Arrêter</button>
+                    {% else %}
+                        <button class="btn-sm btn-primary" style="margin-top: 0.25rem; background: rgba(255,255,255,0.9); color: var(--primary-800);">Démarrer</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Tabs #}
+    <div class="tabs-container">
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="summary">📊 Résumé</button>
+            <button class="tab-btn" data-tab="console">💻 Console</button>
+            <button class="tab-btn" data-tab="snapshots">📸 Snapshots</button>
+            <button class="tab-btn" data-tab="events">📋 Événements</button>
+        </div>
+
+        <div class="tab-content-wrapper">
+            {# Tab 1: Summary #}
+            <div id="tab-summary" class="tab-pane active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🖥️</div>
+                        <div class="stat-label">CPU</div>
+                        <div class="stat-value">45<span class="stat-unit">%</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-label">RAM</div>
+                        <div class="stat-value">62<span class="stat-unit">%</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💿</div>
+                        <div class="stat-label">Disque</div>
+                        <div class="stat-value">38<span class="stat-unit">%</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🌐</div>
+                        <div class="stat-label">Réseau</div>
+                        <div class="stat-value">24<span class="stat-unit">Mbps</span></div>
+                    </div>
+                </div>
+
+                <div class="mini-charts">
+                    <div class="mini-chart">
+                        <div class="mini-chart-header">
+                            <span class="mini-chart-title">CPU (24h)</span>
+                            <span class="mini-chart-value" style="color: #10b981;">45%</span>
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="cpuChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="mini-chart">
+                        <div class="mini-chart-header">
+                            <span class="mini-chart-title">RAM (24h)</span>
+                            <span class="mini-chart-value" style="color: #8b5cf6;">62%</span>
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="ramChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="mini-chart">
+                        <div class="mini-chart-header">
+                            <span class="mini-chart-title">Disque (24h)</span>
+                            <span class="mini-chart-value" style="color: #f59e0b;">38%</span>
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="diskChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="mini-chart">
+                        <div class="mini-chart-header">
+                            <span class="mini-chart-title">Réseau (24h)</span>
+                            <span class="mini-chart-value" style="color: #3b82f6;">24 Mbps</span>
+                        </div>
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="networkChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Tab 2: Console #}
+            <div id="tab-console" class="tab-pane">
+                <div class="console-wrapper">
+                    <div class="console-toolbar">
+                        <button>Plein écran</button>
+                        <button>Ctrl+Alt+Del</button>
+                        <button>Redémarrer</button>
+                    </div>
+                    <div class="console-screen">
+                        <p>{{ vm.name }} login: _</p>
+                        <p style="margin-top: 1rem; color: var(--gray-500);">Console VNC/noVNC</p>
+                    </div>
+                </div>
+            </div>
+
+            {# Tab 3: Snapshots #}
+            <div id="tab-snapshots" class="tab-pane">
+                <div style="margin-bottom: 0.75rem;">
+                    <button class="btn-sm btn-primary">+ Créer</button>
+                </div>
+                <div class="compact-table-wrapper">
+                    <table class="compact-table">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Date</th>
+                                <th>Taille</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for snapshot in vm.snapshots %}
+                            <tr>
+                                <td><strong>{{ snapshot.name }}</strong></td>
+                                <td>{{ snapshot.date }}</td>
+                                <td>{{ snapshot.size }}</td>
+                                <td>{{ snapshot.description }}</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <a href="#" class="btn-sm btn-secondary">Restaurer</a>
+                                        <a href="#" class="btn-sm btn-danger">Suppr.</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 1.5rem;">Aucun snapshot</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {# Tab 4: Events #}
+            <div id="tab-events" class="tab-pane">
+                <div class="compact-table-wrapper">
+                    <table class="compact-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Message</th>
+                                <th>Utilisateur</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in vm.events %}
+                            <tr>
+                                <td>{{ event.date }}</td>
+                                <td>
+                                    {% if event.type == 'info' %}
+                                        <span class="badge badge-info">Info</span>
+                                    {% elseif event.type == 'maintenance' %}
+                                        <span class="badge badge-warning">Maint.</span>
+                                    {% else %}
+                                        <span class="badge badge-success">{{ event.type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ event.message }}</td>
+                                <td>{{ event.user }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 1.5rem;">Aucun événement</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+            
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabPanes.forEach(p => p.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(`tab-${targetTab}`).classList.add('active');
+        });
+    });
+
+    // Initialize charts
+    const hours = [];
+    for (let i = 11; i >= 0; i--) {
+        hours.push((new Date().getHours() - i + 24) % 24 + 'h');
+    }
+
+    const chartConfig = {
+        type: 'line',
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            scales: {
+                y: {
+                    display: false,
+                    beginAtZero: true,
+                    max: 100
+                },
+                x: {
+                    display: false
+                }
+            },
+            elements: {
+                line: {
+                    borderWidth: 2,
+                    tension: 0.4
+                },
+                point: {
+                    radius: 0
+                }
+            }
+        }
+    };
+
+    // CPU Chart
+    new Chart(document.getElementById('cpuChart'), {
+        ...chartConfig,
+        data: {
+            labels: hours,
+            datasets: [{
+                data: [30, 35, 40, 45, 50, 48, 42, 38, 45, 50, 48, 45],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    // RAM Chart
+    new Chart(document.getElementById('ramChart'), {
+        ...chartConfig,
+        data: {
+            labels: hours,
+            datasets: [{
+                data: [55, 58, 60, 62, 65, 63, 60, 58, 62, 64, 63, 62],
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    // Disk Chart
+    new Chart(document.getElementById('diskChart'), {
+        ...chartConfig,
+        data: {
+            labels: hours,
+            datasets: [{
+                data: [35, 36, 37, 38, 39, 38, 37, 36, 38, 39, 38, 38],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    // Network Chart
+    const networkConfig = {...chartConfig};
+    delete networkConfig.options.scales.y.max;
+    
+    new Chart(document.getElementById('networkChart'), {
+        ...networkConfig,
+        data: {
+            labels: hours,
+            datasets: [{
+                data: [15, 18, 22, 20, 25, 28, 24, 20, 22, 26, 25, 24],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true
+            }]
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
