@@ -68,13 +68,74 @@ final class ListVMsController extends AbstractController
         ]);
     }
 
-    #[Route('/vm/{vmid}', name: 'app_vm_details')]
+    #[Route('/vm/create', name: 'app_vm_create')]
+    public function create(): Response
+    {
+        return $this->render('vm/create.html.twig');
+    }
+
+    #[Route('/vm/{vmid}', name: 'app_vm_details', requirements: ['vmid' => '\d+'])]
     public function details(int $vmid): Response
     {
-        // Pass vmid to template - data will be loaded via API
-        return $this->render('vm/details.html.twig', [
+        // Données VM en dur pour la démonstration
+        $vmData = [
             'vmid' => $vmid,
-            'api_base_url' => $_ENV['API_BASE_URL'] ?? 'http://localhost:8001',
+            'name' => 'web-01',
+            'status' => 'running',
+            'node' => 'proxmox-01',
+            'cpus' => 2,
+            'maxmem' => 4294967296, // 4GB en bytes
+            'mem' => 2147483648, // 2GB utilisés
+            'maxdisk' => 53687091200, // 50GB en bytes
+            'disk' => 10737418240, // 10GB utilisés
+            'uptime' => 86400, // 1 jour en secondes
+            'cpu' => 0.25, // 25% CPU
+            'netin' => 104857600, // 100MB
+            'netout' => 52428800, // 50MB
+        ];
+
+        // Données des snapshots en dur
+        $snapshots = [
+            [
+                'name' => 'snapshot-2025-10-15-01',
+                'snaptime' => 1728990600, // timestamp
+                'description' => 'Avant mise à jour système',
+                'size' => 2684354560 // 2.5GB
+            ],
+            [
+                'name' => 'snapshot-2025-10-14-01', 
+                'snaptime' => 1728903600,
+                'description' => 'Configuration initiale',
+                'size' => 2469606195 // 2.3GB
+            ]
+        ];
+
+        // Données des événements en dur
+        $events = [
+            [
+                'date' => '15/10/2025 14:23',
+                'type' => 'info',
+                'message' => 'VM démarrée',
+                'user' => 'admin'
+            ],
+            [
+                'date' => '15/10/2025 10:15',
+                'type' => 'maintenance', 
+                'message' => 'Snapshot créé',
+                'user' => 'admin'
+            ],
+            [
+                'date' => '14/10/2025 18:45',
+                'type' => 'info',
+                'message' => 'VM arrêtée',
+                'user' => 'admin'
+            ]
+        ];
+
+        return $this->render('vm/details.html.twig', [
+            'vm' => $vmData,
+            'snapshots' => $snapshots,
+            'events' => $events,
         ]);
     }
 

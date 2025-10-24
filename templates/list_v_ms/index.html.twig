@@ -215,7 +215,7 @@
     <form method="get" style="flex: 1; max-width: 400px; margin: 0;">
         <input id="q" name="q" type="search" placeholder="Rechercher par nom, IP...">
     </form>
-    <a class="contrast" href="#" role="button">+ Créer une VM</a>
+    <a class="contrast" href="{{ path('app_vm_create') }}" role="button">+ Créer une VM</a>
 </div>
 
 {% if vms is empty %}
