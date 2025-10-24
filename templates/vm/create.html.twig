@@ -1,0 +1,552 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer une VM{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .create-vm-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            margin-bottom: 1rem;
+            color: var(--primary-600);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.375rem 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.8125rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary-700);
+            background: var(--primary-50);
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%);
+            color: white;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            margin: 0.375rem 0 0 0;
+            opacity: 0.9;
+            font-size: 0.8125rem;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .form-section {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .form-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .required::after {
+            content: ' *';
+            color: var(--danger);
+        }
+
+        .form-input,
+        .form-select {
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            transition: all 0.2s;
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-600);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        .form-help {
+            font-size: 0.6875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Resource cards */
+        .resource-cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .resource-card {
+            background: var(--gray-50);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .resource-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .resource-label {
+            font-size: 0.625rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .resource-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .range-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--gray-200);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-600);
+            cursor: pointer;
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-600);
+            cursor: pointer;
+            border: none;
+        }
+
+        .form-actions {
+            padding: 1.25rem;
+            background: var(--gray-50);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--primary-600);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-700);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        /* OS selection */
+        .os-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.625rem;
+        }
+
+        .os-card {
+            background: white;
+            padding: 0.875rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .os-card:hover {
+            border-color: var(--primary-400);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .os-card.selected {
+            border-color: var(--primary-600);
+            background: var(--primary-50);
+        }
+
+        .os-icon {
+            font-size: 1.75rem;
+            margin-bottom: 0.375rem;
+        }
+
+        .os-name {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        input[type="radio"].os-radio {
+            display: none;
+        }
+
+        /* Summary box */
+        .summary-box {
+            background: var(--primary-50);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--primary-200);
+        }
+
+        .summary-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.375rem 0;
+            font-size: 0.75rem;
+            border-bottom: 1px solid var(--primary-100);
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            color: var(--text-secondary);
+        }
+
+        .summary-value {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .form-grid,
+            .form-grid-3,
+            .resource-cards,
+            .os-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="create-vm-wrapper">
+    <a href="{{ path('app_list_v_ms') }}" class="back-link">← Retour</a>
+
+    <div class="page-header">
+        <h1>Créer une machine virtuelle</h1>
+        <p>Configurez et déployez une nouvelle VM</p>
+    </div>
+
+    <form id="create-vm-form">
+        <div class="form-container">
+            {# Section 1: Nom et OS #}
+            <div class="form-section">
+                <h2 class="section-title">📋 Informations générales</h2>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label required" for="vm-name">Nom de la VM</label>
+                    <input type="text" id="vm-name" name="vm_name" class="form-input" placeholder="web-server-01" required>
+                    <span class="form-help">Lettres, chiffres et tirets uniquement</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Système d'exploitation</label>
+                    <div class="os-grid">
+                        <label class="os-card">
+                            <input type="radio" name="os_template" value="ubuntu-22.04" class="os-radio" required>
+                            <div class="os-icon">🐧</div>
+                            <div class="os-name">Ubuntu 22.04</div>
+                        </label>
+                        <label class="os-card">
+                            <input type="radio" name="os_template" value="debian-12" class="os-radio">
+                            <div class="os-icon">🌀</div>
+                            <div class="os-name">Debian 12</div>
+                        </label>
+                        <label class="os-card">
+                            <input type="radio" name="os_template" value="centos-9" class="os-radio">
+                            <div class="os-icon">🔴</div>
+                            <div class="os-name">CentOS 9</div>
+                        </label>
+                        <label class="os-card">
+                            <input type="radio" name="os_template" value="windows-server" class="os-radio">
+                            <div class="os-icon">🪟</div>
+                            <div class="os-name">Windows</div>
+                        </label>
+                        <label class="os-card">
+                            <input type="radio" name="os_template" value="alpine" class="os-radio">
+                            <div class="os-icon">🏔️</div>
+                            <div class="os-name">Alpine</div>
+                        </label>
+                        <label class="os-card">
+                            <input type="radio" name="os_template" value="custom" class="os-radio">
+                            <div class="os-icon">⚙️</div>
+                            <div class="os-name">Custom</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            {# Section 2: Ressources #}
+            <div class="form-section">
+                <h2 class="section-title">⚡ Ressources</h2>
+                
+                <div class="resource-cards">
+                    <div class="resource-card">
+                        <div class="resource-icon">🖥️</div>
+                        <div class="resource-label">CPU</div>
+                        <div class="resource-value" id="cpu-display">2</div>
+                        <input type="range" id="vm-cpu" name="cpu" min="1" max="16" value="2" class="range-slider">
+                    </div>
+                    <div class="resource-card">
+                        <div class="resource-icon">💾</div>
+                        <div class="resource-label">RAM</div>
+                        <div class="resource-value" id="ram-display">4 GB</div>
+                        <input type="range" id="vm-ram" name="ram" min="1" max="64" value="4" class="range-slider">
+                    </div>
+                    <div class="resource-card">
+                        <div class="resource-icon">💿</div>
+                        <div class="resource-label">Disque</div>
+                        <div class="resource-value" id="disk-display">32 GB</div>
+                        <input type="range" id="vm-disk" name="disk" min="10" max="500" value="32" step="10" class="range-slider">
+                    </div>
+                </div>
+            </div>
+
+            {# Section 3: Réseau #}
+            <div class="form-section">
+                <h2 class="section-title">🌐 Réseau</h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label required" for="vm-network">Bridge réseau</label>
+                        <select id="vm-network" name="network" class="form-select" required>
+                            <option value="">-- Sélectionner --</option>
+                            <option value="vmbr0">vmbr0 (Principal)</option>
+                            <option value="vmbr1">vmbr1 (Interne)</option>
+                            <option value="vmbr2">vmbr2 (DMZ)</option>
+                            <option value="vmbr3">vmbr3 (Management)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="vm-ip">IP (optionnel)</label>
+                        <input type="text" id="vm-ip" name="ip_address" class="form-input" placeholder="192.168.1.100">
+                        <span class="form-help">Vide = DHCP</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Actions #}
+            <div class="form-actions">
+                <div class="summary-box" style="flex: 1; max-width: 400px;">
+                    <div class="summary-title">Récapitulatif</div>
+                    <div class="summary-item">
+                        <span class="summary-label">OS</span>
+                        <span class="summary-value" id="summary-os">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">CPU</span>
+                        <span class="summary-value" id="summary-cpu">2 vCPU</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">RAM</span>
+                        <span class="summary-value" id="summary-ram">4 GB</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Disque</span>
+                        <span class="summary-value" id="summary-disk">32 GB</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <a href="{{ path('app_list_v_ms') }}" class="btn btn-secondary">Annuler</a>
+                    <button type="submit" class="btn btn-primary">✓ Créer</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // OS selection
+    const osCards = document.querySelectorAll('.os-card');
+    const osRadios = document.querySelectorAll('.os-radio');
+    const summaryOs = document.getElementById('summary-os');
+
+    osCards.forEach((card, index) => {
+        card.addEventListener('click', () => {
+            osCards.forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            osRadios[index].checked = true;
+            summaryOs.textContent = card.querySelector('.os-name').textContent;
+        });
+    });
+
+    // Auto-select first OS
+    if (osCards.length > 0) {
+        osCards[0].click();
+    }
+
+    // CPU slider
+    const cpuSlider = document.getElementById('vm-cpu');
+    const cpuDisplay = document.getElementById('cpu-display');
+    const summaryCpu = document.getElementById('summary-cpu');
+    
+    cpuSlider.addEventListener('input', (e) => {
+        const value = e.target.value;
+        cpuDisplay.textContent = value;
+        summaryCpu.textContent = value + ' vCPU';
+    });
+
+    // RAM slider
+    const ramSlider = document.getElementById('vm-ram');
+    const ramDisplay = document.getElementById('ram-display');
+    const summaryRam = document.getElementById('summary-ram');
+    
+    ramSlider.addEventListener('input', (e) => {
+        const value = e.target.value;
+        ramDisplay.textContent = value + ' GB';
+        summaryRam.textContent = value + ' GB';
+    });
+
+    // Disk slider
+    const diskSlider = document.getElementById('vm-disk');
+    const diskDisplay = document.getElementById('disk-display');
+    const summaryDisk = document.getElementById('summary-disk');
+    
+    diskSlider.addEventListener('input', (e) => {
+        const value = e.target.value;
+        diskDisplay.textContent = value + ' GB';
+        summaryDisk.textContent = value + ' GB';
+    });
+
+    // Form submission
+    const form = document.getElementById('create-vm-form');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const data = {
+            name: formData.get('vm_name'),
+            os_template: formData.get('os_template'),
+            cpu: parseInt(formData.get('cpu')),
+            ram: parseInt(formData.get('ram')),
+            disk: parseInt(formData.get('disk')),
+            network: formData.get('network'),
+            ip_address: formData.get('ip_address') || null
+        };
+
+        console.log('VM Configuration:', data);
+        
+        // TODO: Envoyer à l'API quand elle sera prête
+        alert('✓ Configuration validée!\n\nLa VM sera créée avec:\n' + 
+              `• OS: ${data.os_template}\n` +
+              `• CPU: ${data.cpu} vCPU\n` +
+              `• RAM: ${data.ram} GB\n` +
+              `• Disque: ${data.disk} GB\n` +
+              `• Réseau: ${data.network}`);
+        
+        // Plus tard: await api.createVM(data);
+    });
+});
+</script>
+{% endblock %}
+
