@@ -1,0 +1,1016 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}VM {{ vmid }}{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        /* Container principal */
+        .vm-details-wrapper {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .vm-details-wrapper *,
+        .vm-details-wrapper *::before,
+        .vm-details-wrapper *::after {
+            box-sizing: border-box;
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary-600);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Back button */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            margin-bottom: 1rem;
+            color: var(--primary-600);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.375rem 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.8125rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary-700);
+            background: var(--primary-50);
+        }
+
+        /* VM Info Card */
+        .vm-info-card {
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%);
+            color: white;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-md);
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .vm-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .vm-info-title h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .vm-status-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .vm-status-badge.running {
+            background: rgba(16, 185, 129, 0.9);
+        }
+
+        .vm-status-badge.stopped {
+            background: rgba(239, 68, 68, 0.9);
+        }
+
+        .vm-specs {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+            max-width: 100%;
+        }
+
+        .vm-spec-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+            min-width: 0;
+        }
+
+        .vm-spec-label {
+            font-size: 0.625rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .vm-spec-value {
+            font-size: 0.9375rem;
+            font-weight: 700;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .tab-nav {
+            display: flex;
+            background: var(--gray-50);
+            border-bottom: 2px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--primary-600);
+            border-bottom-color: var(--primary-600);
+        }
+
+        .tab-content-wrapper {
+            padding: 1rem;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .tab-pane {
+            display: none;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: var(--gray-50);
+            padding: 0.875rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            min-width: 0;
+        }
+
+        .stat-icon {
+            font-size: 1.375rem;
+            margin-bottom: 0.375rem;
+        }
+
+        .stat-label {
+            font-size: 0.625rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-unit {
+            font-size: 0.6875rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Mini charts */
+        .mini-charts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .mini-chart {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            min-width: 0;
+        }
+
+        .mini-chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .mini-chart-title {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-transform: uppercase;
+        }
+
+        .mini-chart-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        .chart-canvas-wrapper {
+            position: relative;
+            height: 80px;
+            width: 100%;
+        }
+
+        .mini-chart canvas {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Console */
+        .console-wrapper {
+            background: var(--gray-900);
+            border-radius: 8px;
+            border: 1px solid var(--gray-700);
+            width: 100%;
+        }
+
+        .console-toolbar {
+            background: var(--gray-800);
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--gray-700);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .console-toolbar button {
+            background: var(--gray-700);
+            border: none;
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.6875rem;
+            cursor: pointer;
+        }
+
+        .console-screen {
+            padding: 1rem;
+            height: 200px;
+            overflow-y: auto;
+            background: var(--gray-900);
+            color: #4ade80;
+            font-family: 'Consolas', monospace;
+            font-size: 0.75rem;
+        }
+
+        /* Tables */
+        .compact-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .compact-table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+
+        .compact-table thead {
+            background: var(--gray-50);
+        }
+
+        .compact-table th {
+            padding: 0.625rem 0.75rem;
+            text-align: left;
+            font-size: 0.625rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .compact-table td {
+            padding: 0.625rem 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .compact-table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* Badges */
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.625rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-info { background: var(--primary-600); color: white; }
+        .badge-success { background: var(--success); color: white; }
+        .badge-warning { background: var(--warning); color: white; }
+
+        /* Buttons */
+        .btn-sm {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.6875rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-600);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-700);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-danger {
+            background: var(--danger-light);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.375rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .vm-specs {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .mini-charts {
+                grid-template-columns: 1fr;
+            }
+
+            .compact-table {
+                min-width: 500px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .compact-table {
+                min-width: 450px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="vm-details-wrapper">
+    <a href="{{ path('app_list_v_ms') }}" class="back-link">← Retour</a>
+
+    <div id="loading-state" class="loading">
+        <div class="loading-spinner"></div>
+        <p>Chargement des données...</p>
+    </div>
+
+    <div id="vm-content" style="display: none;">
+        {# VM Info Card #}
+        <div class="vm-info-card">
+            <div class="vm-info-header">
+                <div class="vm-info-title">
+                    <h1 id="vm-name">-</h1>
+                </div>
+                <div>
+                    <span id="vm-status" class="vm-status-badge">-</span>
+                </div>
+            </div>
+            <div class="vm-specs">
+                <div class="vm-spec-item">
+                    <div class="vm-spec-label">Node</div>
+                    <div class="vm-spec-value" id="vm-node">-</div>
+                </div>
+                <div class="vm-spec-item">
+                    <div class="vm-spec-label">CPU</div>
+                    <div class="vm-spec-value" id="vm-cpu">-</div>
+                </div>
+                <div class="vm-spec-item">
+                    <div class="vm-spec-label">RAM</div>
+                    <div class="vm-spec-value" id="vm-ram">-</div>
+                </div>
+                <div class="vm-spec-item">
+                    <div class="vm-spec-label">Action</div>
+                    <div class="vm-spec-value">
+                        <button id="vm-action-btn" class="btn-sm">-</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Tabs #}
+        <div class="tabs-container">
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="summary">📊 Résumé</button>
+                <button class="tab-btn" data-tab="console">💻 Console</button>
+                <button class="tab-btn" data-tab="snapshots">📸 Snapshots</button>
+                <button class="tab-btn" data-tab="events">📋 Événements</button>
+            </div>
+
+            <div class="tab-content-wrapper">
+                {# Tab 1: Summary #}
+                <div id="tab-summary" class="tab-pane active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🖥️</div>
+                            <div class="stat-label">CPU</div>
+                            <div class="stat-value" id="stat-cpu">-<span class="stat-unit">%</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💾</div>
+                            <div class="stat-label">RAM</div>
+                            <div class="stat-value" id="stat-ram">-<span class="stat-unit">%</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💿</div>
+                            <div class="stat-label">Disque</div>
+                            <div class="stat-value" id="stat-disk">-<span class="stat-unit">%</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⏱️</div>
+                            <div class="stat-label">Uptime</div>
+                            <div class="stat-value" id="stat-uptime"><span class="stat-unit">-</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mini-charts">
+                        <div class="mini-chart">
+                            <div class="mini-chart-header">
+                                <span class="mini-chart-title">CPU (24h)</span>
+                                <span class="mini-chart-value" style="color: #10b981;" id="chart-cpu-val">-%</span>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="cpuChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="mini-chart">
+                            <div class="mini-chart-header">
+                                <span class="mini-chart-title">RAM (24h)</span>
+                                <span class="mini-chart-value" style="color: #8b5cf6;" id="chart-ram-val">-%</span>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="ramChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="mini-chart">
+                            <div class="mini-chart-header">
+                                <span class="mini-chart-title">Disque (24h)</span>
+                                <span class="mini-chart-value" style="color: #f59e0b;" id="chart-disk-val">-%</span>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="diskChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="mini-chart">
+                            <div class="mini-chart-header">
+                                <span class="mini-chart-title">Réseau (24h)</span>
+                                <span class="mini-chart-value" style="color: #3b82f6;" id="chart-net-val">- MB/s</span>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="networkChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# Tab 2: Console #}
+                <div id="tab-console" class="tab-pane">
+                    <div class="console-wrapper">
+                        <div class="console-toolbar">
+                            <button>Plein écran</button>
+                            <button>Ctrl+Alt+Del</button>
+                            <button>Redémarrer</button>
+                        </div>
+                        <div class="console-screen">
+                            <p>Console VNC/noVNC sera intégrée ici</p>
+                        </div>
+                    </div>
+                </div>
+
+                {# Tab 3: Snapshots #}
+                <div id="tab-snapshots" class="tab-pane">
+                    <div style="margin-bottom: 0.75rem;">
+                        <button id="create-snapshot-btn" class="btn-sm btn-primary">+ Créer un snapshot</button>
+                    </div>
+                    <div class="compact-table-wrapper">
+                        <table class="compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="snapshots-list">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 1.5rem;">Chargement...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {# Tab 4: Events #}
+                <div id="tab-events" class="tab-pane">
+                    <div class="compact-table-wrapper">
+                        <table class="compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Message</th>
+                                    <th>Utilisateur</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-list">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 1.5rem;">En attente d'événements...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const VMID = {{ vmid }};
+const API_BASE_URL = '{{ api_base_url }}';
+const api = new ApiService(API_BASE_URL);
+
+let vmData = null;
+let vmNode = null;
+let charts = {};
+
+// Helper functions
+function formatBytes(bytes) {
+    const gb = bytes / (1024 * 1024 * 1024);
+    return gb.toFixed(2) + ' GB';
+}
+
+function formatUptime(seconds) {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    if (days > 0) return `${days}j ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+}
+
+function formatDate(timestamp) {
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleString('fr-FR');
+}
+
+// Load VM data
+async function loadVMData() {
+    try {
+        // Get all VMs to find the right node
+        const vmsResponse = await api.getVMs();
+        
+        if (!vmsResponse.success) {
+            throw new Error(vmsResponse.error || 'Failed to load VMs');
+        }
+
+        // Find our VM
+        const vm = vmsResponse.data.find(v => v.vmid === VMID);
+        
+        if (!vm) {
+            throw new Error(`VM ${VMID} not found`);
+        }
+
+        vmData = vm;
+        vmNode = vm.node;
+
+        // Update UI
+        updateVMInfo(vm);
+        
+        // Load snapshots
+        await loadSnapshots();
+        
+        // Initialize charts
+        initializeCharts(vm);
+        
+        // Connect to event stream
+        connectEventStream();
+
+        // Show content
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('vm-content').style.display = 'block';
+
+    } catch (error) {
+        console.error('Error loading VM data:', error);
+        document.getElementById('loading-state').innerHTML = `
+            <p style="color: var(--danger);">❌ Erreur: ${error.message}</p>
+            <p style="font-size: 0.75rem;">Vérifiez que l'API backend est démarrée</p>
+            <p style="font-size: 0.625rem; color: var(--text-tertiary);">URL API: ${API_BASE_URL}</p>
+        `;
+    }
+}
+
+// Update VM info in UI
+function updateVMInfo(vm) {
+    document.getElementById('vm-name').textContent = vm.name || `VM ${vm.vmid}`;
+    
+    const statusBadge = document.getElementById('vm-status');
+    statusBadge.textContent = vm.status === 'running' ? '● En cours' : '● Arrêtée';
+    statusBadge.className = `vm-status-badge ${vm.status}`;
+    
+    document.getElementById('vm-node').textContent = vm.node;
+    document.getElementById('vm-cpu').textContent = `${vm.cpus} vCPU`;
+    document.getElementById('vm-ram').textContent = formatBytes(vm.maxmem);
+    
+    // Stats
+    const cpuPercent = Math.round((vm.cpu || 0) * 100);
+    const ramPercent = Math.round((vm.mem / vm.maxmem) * 100);
+    const diskPercent = Math.round((vm.disk / vm.maxdisk) * 100);
+    
+    document.getElementById('stat-cpu').innerHTML = `${cpuPercent}<span class="stat-unit">%</span>`;
+    document.getElementById('stat-ram').innerHTML = `${ramPercent}<span class="stat-unit">%</span>`;
+    document.getElementById('stat-disk').innerHTML = `${diskPercent}<span class="stat-unit">%</span>`;
+    document.getElementById('stat-uptime').innerHTML = `<span class="stat-unit">${formatUptime(vm.uptime || 0)}</span>`;
+    
+    document.getElementById('chart-cpu-val').textContent = `${cpuPercent}%`;
+    document.getElementById('chart-ram-val').textContent = `${ramPercent}%`;
+    document.getElementById('chart-disk-val').textContent = `${diskPercent}%`;
+    
+    // Action button
+    const actionBtn = document.getElementById('vm-action-btn');
+    if (vm.status === 'running') {
+        actionBtn.textContent = 'Arrêter';
+        actionBtn.className = 'btn-sm btn-danger';
+        actionBtn.onclick = () => stopVM();
+    } else {
+        actionBtn.textContent = 'Démarrer';
+        actionBtn.className = 'btn-sm btn-primary';
+        actionBtn.style.background = 'rgba(255,255,255,0.9)';
+        actionBtn.style.color = 'var(--primary-800)';
+        actionBtn.onclick = () => startVM();
+    }
+}
+
+// VM actions
+async function startVM() {
+    const btn = document.getElementById('vm-action-btn');
+    btn.disabled = true;
+    btn.textContent = 'Démarrage...';
+    
+    try {
+        const result = await api.startVM(VMID);
+        if (result.success) {
+            setTimeout(() => loadVMData(), 2000);
+        } else {
+            alert('Erreur: ' + result.error);
+            btn.disabled = false;
+        }
+    } catch (error) {
+        alert('Erreur lors du démarrage: ' + error.message);
+        btn.disabled = false;
+    }
+}
+
+async function stopVM() {
+    if (!confirm('Voulez-vous vraiment arrêter cette VM ?')) return;
+    
+    const btn = document.getElementById('vm-action-btn');
+    btn.disabled = true;
+    btn.textContent = 'Arrêt...';
+    
+    try {
+        const result = await api.stopVM(VMID, 'acpi');
+        if (result.success) {
+            setTimeout(() => loadVMData(), 2000);
+        } else {
+            alert('Erreur: ' + result.error);
+            btn.disabled = false;
+        }
+    } catch (error) {
+        alert('Erreur lors de l\'arrêt: ' + error.message);
+        btn.disabled = false;
+    }
+}
+
+// Load snapshots
+async function loadSnapshots() {
+    try {
+        const result = await api.getSnapshots(VMID);
+        const tbody = document.getElementById('snapshots-list');
+        
+        if (!result.success || !result.data || result.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1.5rem;">Aucun snapshot</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = result.data.map(snap => `
+            <tr>
+                <td><strong>${snap.name}</strong></td>
+                <td>${formatDate(snap.snaptime)}</td>
+                <td>${snap.description || '-'}</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="btn-sm btn-secondary" onclick="rollbackSnapshot('${snap.name}')">Restaurer</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading snapshots:', error);
+    }
+}
+
+// Create snapshot
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('create-snapshot-btn')?.addEventListener('click', async () => {
+        const name = prompt('Nom du snapshot:');
+        if (!name) return;
+        
+        const description = prompt('Description (optionnel):');
+        
+        try {
+            const result = await api.createSnapshot(VMID, name, description);
+            if (result.success) {
+                alert('Snapshot créé avec succès!');
+                setTimeout(() => loadSnapshots(), 2000);
+            } else {
+                alert('Erreur: ' + result.error);
+            }
+        } catch (error) {
+            alert('Erreur: ' + error.message);
+        }
+    });
+});
+
+// Rollback snapshot
+async function rollbackSnapshot(snapname) {
+    if (!confirm(`Voulez-vous vraiment restaurer le snapshot "${snapname}" ?`)) return;
+    
+    try {
+        const result = await api.rollbackSnapshot(VMID, snapname);
+        if (result.success) {
+            alert('Restauration initiée!');
+            setTimeout(() => loadVMData(), 3000);
+        } else {
+            alert('Erreur: ' + result.error);
+        }
+    } catch (error) {
+        alert('Erreur: ' + error.message);
+    }
+}
+
+// Event stream
+function connectEventStream() {
+    const eventsList = document.getElementById('events-list');
+    const events = [];
+    
+    api.connectEventStream({
+        onConnected: () => {
+            console.log('Connected to events');
+        },
+        onEvent: (type, data) => {
+            // Only show events for this VM
+            if (data.id && parseInt(data.id) !== VMID) return;
+            
+            events.unshift({
+                date: new Date(),
+                type: type,
+                message: getEventMessage(type, data),
+                user: data.user || 'system'
+            });
+            
+            // Keep only last 20 events
+            if (events.length > 20) events.pop();
+            
+            updateEventsList();
+        }
+    });
+    
+    function updateEventsList() {
+        if (events.length === 0) return;
+        
+        eventsList.innerHTML = events.map(event => `
+            <tr>
+                <td>${event.date.toLocaleString('fr-FR')}</td>
+                <td><span class="badge badge-info">${event.type}</span></td>
+                <td>${event.message}</td>
+                <td>${event.user}</td>
+            </tr>
+        `).join('');
+    }
+    
+    function getEventMessage(type, data) {
+        const messages = {
+            'vm_start': 'VM démarrée',
+            'vm_stop': 'VM arrêtée',
+            'vm_snapshot': 'Snapshot créé',
+            'vm_reboot': 'VM redémarrée',
+            'task': 'Tâche exécutée'
+        };
+        return messages[type] || type;
+    }
+}
+
+// Initialize charts
+function initializeCharts(vm) {
+    const hours = [];
+    for (let i = 11; i >= 0; i--) {
+        hours.push((new Date().getHours() - i + 24) % 24 + 'h');
+    }
+
+    const chartConfig = {
+        type: 'line',
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            scales: {
+                y: { display: false, beginAtZero: true, max: 100 },
+                x: { display: false }
+            },
+            elements: {
+                line: { borderWidth: 2, tension: 0.4 },
+                point: { radius: 0 }
+            }
+        }
+    };
+
+    // Generate sample data (in reality, you'd get this from metrics API)
+    const cpuPercent = Math.round((vm.cpu || 0) * 100);
+    const ramPercent = Math.round((vm.mem / vm.maxmem) * 100);
+    const diskPercent = Math.round((vm.disk / vm.maxdisk) * 100);
+
+    charts.cpu = new Chart(document.getElementById('cpuChart'), {
+        ...chartConfig,
+        data: {
+            labels: hours,
+            datasets: [{
+                data: generateTrendData(12, cpuPercent, 10),
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    charts.ram = new Chart(document.getElementById('ramChart'), {
+        ...chartConfig,
+        data: {
+            labels: hours,
+            datasets: [{
+                data: generateTrendData(12, ramPercent, 5),
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    charts.disk = new Chart(document.getElementById('diskChart'), {
+        ...chartConfig,
+        data: {
+            labels: hours,
+            datasets: [{
+                data: generateTrendData(12, diskPercent, 2),
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                fill: true
+            }]
+        }
+    });
+
+    const netSpeed = Math.round((vm.netin + vm.netout) / (1024 * 1024 * vm.uptime));
+    charts.network = new Chart(document.getElementById('networkChart'), {
+        type: 'line',
+        options: {
+            ...chartConfig.options,
+            scales: {
+                y: { display: false, beginAtZero: true },
+                x: { display: false }
+            }
+        },
+        data: {
+            labels: hours,
+            datasets: [{
+                data: generateTrendData(12, netSpeed, 5),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true
+            }]
+        }
+    });
+    
+    document.getElementById('chart-net-val').textContent = `${netSpeed} MB/s`;
+}
+
+function generateTrendData(length, current, variance) {
+    const data = [];
+    for (let i = 0; i < length; i++) {
+        const value = current + (Math.random() - 0.5) * variance * 2;
+        data.push(Math.max(0, Math.min(100, value)));
+    }
+    return data;
+}
+
+// Tab switching
+document.addEventListener('DOMContentLoaded', () => {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+            
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabPanes.forEach(p => p.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(`tab-${targetTab}`).classList.add('active');
+        });
+    });
+
+    // Load data on page load
+    loadVMData();
+});
+</script>
+{% endblock %}
+{% endblock %}
