@@ -2,26 +2,23 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-use App\Entity\User;
-use App\Form\UserRegistrationType;
+use App\Entity\User2;
+use App\Form\RegistrationFormType;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
-
 
 final class ListeVMController extends AbstractController
 {
-
-        #[Route('/', name: 'app_home')]
+    #[Route('/', name: 'app_home')]
     public function home(): Response
     {
         return $this->render('home.html.twig');
     }
-
 
     #[Route('/connection', name: 'app_connection')]
     public function connection(AuthenticationUtils $auth): Response
@@ -36,64 +33,45 @@ final class ListeVMController extends AbstractController
         ]);
     }
 
-
+    
     #[Route('/liste/v/m', name: 'app_liste_v_m')]
     public function index(): Response
     {
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_connection');
+        }
+
         return $this->render('liste_vm/index.html.twig', [
             'controller_name' => 'ListeVMController',
         ]);
     }
 
-    
 
-    #[Route('/inscription', name: 'app_inscription')]
-    public function inscription(
+    #[Route('/register', name: 'app_register')]
+    public function register(
         Request $request,
+        UserPasswordHasherInterface $hasher,
         EntityManagerInterface $em
     ): Response {
-        $user = new User();
-        $form = $this->createForm(UserRegistrationType::class, $user);
+        $user = new User2();
+        $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 
-        // ⇩⇩ DEBUG : si soumis mais invalide, on pousse les erreurs en flash
-        if ($form->isSubmitted() && !$form->isValid()) {
-
-            echo "<script>console.log('in If not valid' );</script>";
-
-            foreach ($form->getErrors(true, true) as $e) {
-                $this->addFlash('error', $e->getMessage());
-            }
-        }
-
-        echo "<script>console.log('before If' );</script>";
-
         if ($form->isSubmitted() && $form->isValid()) {
-
-            echo "<script>console.log('in If valid' );</script>";
-            // Récupère la valeur du champ RepeatedType "plainPassword"
-            // (dans un FormType standard, plainPassword est 'mapped' => false)
-            $plain = (string) $form->get('plainPassword')->getData();
-
-            // IMPORTANT : assigne le password (sinon NULL -> violation NOT NULL)
-            
-            
-            $user->setPassword($plain);
+            /** @var string $plainPassword */
+            $plainPassword = (string) $form->get('plainPassword')->getData();
+            $user->setPassword($hasher->hashPassword($user, $plainPassword));
 
             $em->persist($user);
             $em->flush();
 
             return $this->redirectToRoute('app_connection');
-            echo "<script>console.log('after redirect' );</script>";
         }
 
-        echo "<script>console.log('after If valid' );</script>";
-
-        return $this->render('inscription.html.twig', [
-            'form' => $form->createView(),
+        return $this->render('register.html.twig', [
+            'registrationForm' => $form->createView(),
         ]);
     }
-
 
     #[Route('/forgeten_password', name: 'app_forgeten_password')]
     public function forgeten_password(): Response
@@ -102,4 +80,11 @@ final class ListeVMController extends AbstractController
             'controller_name' => 'ForgetenPasswordController',
         ]);
     }
+
+    #[Route('/logout', name: 'app_logout', methods: ['GET'])]
+    public function logout(): void
+    {
+        // Intercepté par le firewall. Ne sera jamais exécuté.
+    }
+
 }

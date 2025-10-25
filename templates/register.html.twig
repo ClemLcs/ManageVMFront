@@ -116,28 +116,33 @@
         <p>Inscrivez-vous pour un compte <strong>gratuit </strong>.</p>
       </article>
 
-      <article class="block">
+    <article class="block">
+    {% block body %}
+      {% for flash_error in app.flashes('verify_email_error') %}
+          <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
+      {% endfor %}
 
 
-      {{ form_start(form, { action: path('app_inscription'), method: 'post', attr: { novalidate: 'novalidate' } }) }}
+      {{ form_errors(registrationForm) }}
 
-      <div class="name-row">
-        {{ form_row(form.firstName, {'label': false, attr: {'placeholder': 'Prénom', 'autofocus': true}}) }}
-        {{ form_row(form.lastName,  {'label': false, attr: {'placeholder': 'Nom de famille'}}) }}
-      </div>
+      {{ form_start(registrationForm) }}
+          
+          <div class="name-row">
+              {{ form_row(registrationForm.firstName) }}
+              {{ form_row(registrationForm.lastName) }}
+          </div>
 
-      {{ form_row(form.email, {'label': false, attr: {'placeholder': 'Adresse e-mail'}}) }}
-      {{ form_row(form.plainPassword.first,  {'label': false, attr: {'placeholder': 'Mot de passe'}}) }}
-      {{ form_row(form.plainPassword.second, {'label': false, attr: {'placeholder': 'Confirmer le mot de passe'}}) }}
+          {{ form_row(registrationForm.email) }}
+          {{ form_row(registrationForm.plainPassword, {
+              label: 'Password'
+          })}}
 
-      <div class="actions">
-        <button type="submit">M'inscrire</button>
-      </div>
-
-      {{ form_end(form) }}
-
-
+          <button type="submit" class="btn">Register</button>
+      {{ form_end(registrationForm) }}
+    {% endblock %}
       </article>
+
+
     </section>
   </main>
 
