@@ -6,180 +6,91 @@
   <meta name="color-scheme" content="light dark" />
   <title>VM - Se connecter</title>
   <meta name="description" content="Il faut se connecter, c'est tout" />
-
-  <!-- Base : Pico.css -->
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css" />
-
-    <!-- Personnalisation -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css" />
   <style>
-    /* Bandeau fixe légèrement plus clair */
-    header {
-      position: sticky; top: 0; z-index: 10;
-      background-color: rgba(240, 240, 240, 0.7);
-      backdrop-filter: blur(4px);
-      border-bottom: 1px solid rgba(0,0,0,.05);
-    }
-
+    header { position: sticky; top: 0; z-index: 10; background-color: rgba(240,240,240,.7); backdrop-filter: blur(4px); border-bottom: 1px solid rgba(0,0,0,.05); }
     header nav { max-width: 1000px; margin: 0 auto; padding: .5rem 1rem; }
-
-    /* Page en flex, centre le bloc principal */
-    body {
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
-    main.page {
-      flex: 1;                      /* prend la hauteur restante */
-      display: flex;
-      align-items: center;          /* centre verticalement */
-      justify-content: center;      /* centre horizontalement */
-      padding: 2rem 1rem;
-    }
-
-    /* Bloc central (colonne) */
-    .content {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;              
-      width: min(680px, 100%);
-    }
-
-    /* Sous-blocs de blabla */
-    .block {
-      padding: 1rem 1.25rem;
-      border-radius: .5rem;
-      background: var(--pico-card-background-color);
-      box-shadow: var(--pico-card-box-shadow);
-    }
-    .block h2 { margin: 0 0 .5rem 0; }
-
-    /* Formulaire */
-    form .actions {
-      display: flex;
-      gap: .75rem;
-      flex-wrap: wrap;
-    }
-
-    /* Les alternatives (git) */
-    .cta {
-      display: flex;
-      gap: .75rem;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: flex-start;
-    }
-
-    /* Option: resserrer visuel sur écrans larges - GPT proposé ¯\_(ツ)_/¯ */
-    @media (min-width: 960px) {
-      .content { gap: 1.5rem; }
-      .block  { padding: 1.25rem 1.5rem; }
-    }
-
-    
-    .name-row {
-     display: flex;         
-     gap: .75rem;            
-    }
-
-    @media (max-width: 480px) {
-        .name-row { flex-direction: column; }
-    }
+    body { min-height: 100dvh; display: flex; flex-direction: column; }
+    main.page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+    .content { display: flex; flex-direction: column; gap: 1.25rem; width: min(680px, 100%); }
+    .block { padding: 1rem 1.25rem; border-radius: .5rem; background: var(--pico-card-background-color); box-shadow: var(--pico-card-box-shadow); }
+    .block h2, .block h3 { margin: 0 0 .5rem 0; }
+    form .actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+    @media (min-width: 960px) { .content { gap: 1.5rem; } .block { padding: 1.25rem 1.5rem; } }
   </style>
 </head>
-
 <body>
   <header>
     <nav>
-<ul>
-      <li>
-        <a href="/" style="display:inline-block;">
-          <img src="https://www.nomadindesign.com/wp-content/uploads/2014/04/logo-moche.png"
-               alt="Logo VM"
-               style="height:80px; vertical-align:middle;">
-        </a>
-      </li>
-
-      <details class="dropdown">
-        <summary role="button" class="secondary">Accueil</summary>
-        <ul class="dropdown-menu">
-          <li><a href="/liste/v/m">Liste des VM</a></li>
-        </ul>
-      </details>
-    </ul>
+      <ul>
+        <li>
+          <a href="/" style="display:inline-block;">
+            <img src="https://www.nomadindesign.com/wp-content/uploads/2014/04/logo-moche.png" alt="Logo VM" style="height:80px; vertical-align:middle;">
+          </a>
+        </li>
+        <details class="dropdown">
+          <summary role="button" class="secondary">Accueil</summary>
+          <ul class="dropdown-menu">
+            <li><a href="/liste/v/m">Liste des VM</a></li>
+          </ul>
+        </details>
+      </ul>
+    </nav>
   </header>
 
   <main class="page">
     <section class="content">
-      {# Bloc texte  #}
+
       <article class="block">
-        <h2>Bienvenue</h2>
-        <p>Accédez à votre espace VM. <br> Utilisez vos identifiants.</p>
+        <h2>Connexion</h2>
+        <p>Identifiez-vous pour accéder à votre espace.</p>
       </article>
 
-    {% set error = error|default(null) %}
-    {% set last_username = last_username|default('') %}
+      <article class="block">
+        {% if error %}
+          <div class="alert alert-danger" role="alert">
+            {{ error.messageKey|trans(error.messageData, 'security') }}
+          </div>
+        {% endif %}
 
-      {# erreurs d'auth #}
-    {% if error %}
-      <article class="contrast" role="alert">
-        {{ error.messageKey|trans(error.messageData, 'security') }}
+        <form method="post" action="{{ path('app_connection') }}">
+          <label for="inputEmail">Email</label>
+          <input
+            type="email"
+            id="inputEmail"
+            name="_username"
+            value="{{ last_username|default('') }}"
+            autocomplete="email"
+            required
+            autofocus
+          >
+
+          <label for="inputPassword">Mot de passe</label>
+          <input
+            type="password"
+            id="inputPassword"
+            name="_password"
+            autocomplete="current-password"
+            required
+          >
+
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+          <div class="actions">
+            <button type="submit">Se connecter</button>
+            <a role="button" class="secondary" href="{{ path('app_register') }}">Créer un compte</a>
+          </div>
+        </form>
       </article>
-    {% endif %}
 
-    <article class="block">
-      <h2>Me connecter</h2>
-
-      <form method="post" action="{{ path('app_login') }}" novalidate>
-        <input
-          placeholder="Adresse e-mail"
-          type="email"
-          id="email"
-          name="email"
-          value="{{ last_username|default('') }}"
-          autocomplete="username"
-          required
-          autofocus
-        >
-
-        <input
-          placeholder="Mot de passe"
-          type="password"
-          id="password"
-          name="password"
-          autocomplete="current-password"
-          required
-        >
-
-        {# CSRF requis par Symfony Security #}
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
-        {# Optionnel : remember me #}
-        <label>
-          <input type="checkbox" name="_remember_me" value="on"> Se souvenir de moi
-        </label>
-
-        <div class="actions">
-          <button type="submit">Me connecter</button>
-          <a role="button" class="outline secondary" href="/forgeten_password">Mot de passe oublié</a>
-          <a role="button" class="outline secondary" href="/inscription">S'inscrire</a>
-        </div>
-      </form>
-    </article>
-
-
-      {# Bloc “Se connecter” autrement #}
       <article class="block">
         <h3>Autres options</h3>
         <div class="cta">
-          <a role="button" class="contrast" href="/sso">Se connecter via Git</a>
-          <a role="link" class="secondary" href="/aide">Besoin d’aide ?</a>
-          {# Une FAQ ? À supprimer si osef #}
+          <a role="button" class="contrast" href="{{ path('connect_github_start') }}">Se connecter via GitHub</a>
         </div>
       </article>
+
     </section>
   </main>
-
-  
 </body>
 </html>

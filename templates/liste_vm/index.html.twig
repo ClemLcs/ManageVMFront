@@ -1,20 +1,247 @@
-{% extends 'base.html.twig' %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VM — Tableau de bord</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css" />
+  <style>
+    :root{
+      --card-bg: rgba(255,255,255,0.92);
+      --muted: #6b6b6b;
+      --status-up: #2e7d32;
+      --status-down: #c62828;
+      --status-warn: #f9a825;
+    }
+    /* Le header/nav vient du partial _navbar */
+    main.page{ min-height: calc(100dvh - 120px); padding:2rem 1rem; display:flex; justify-content:center; }
+    .container{ width:min(1200px,96%); display:flex; flex-direction:column; gap:1.25rem; }
+    .controls{ display:flex; gap:.75rem; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .controls .left { display:flex; gap:.75rem; align-items:center; }
+    .search { max-width:420px; width:100%; }
+    .vm-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem; }
+    @media (max-width:980px){ .vm-grid{ grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width:640px){ .vm-grid{ grid-template-columns: 1fr; } }
+    .vm-card{ padding:1rem; border-radius:12px; background:var(--card-bg); box-shadow: var(--pico-card-box-shadow); display:flex; flex-direction:column; gap:.5rem; }
+    .vm-header{ display:flex; justify-content:space-between; align-items:center; gap:.5rem; }
+    .vm-meta{ display:flex; gap:.75rem; align-items:center; color:var(--muted); font-size:.95rem; }
+    .status{ display:inline-grid; place-items:center; padding:.35rem .6rem; border-radius:999px; color:#fff; font-weight:600; font-size:.85rem; }
+    .status.up{ background:var(--status-up); }
+    .status.down{ background:var(--status-down); }
+    .status.warn{ background:var(--status-warn); color:#111; }
+    .vm-body{ display:flex; gap:1rem; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+    .specs{ font-size:.95rem; color:var(--muted); }
+    .specs dt{ font-weight:600; color:initial; }
+    .specs dd{ margin:0 0 .5rem 0; }
+    .actions{ display:flex; gap:.5rem; align-items:center; }
+    .actions .btn[disabled]{ opacity:.55; pointer-events:none; }
+    .table-compact{ width:100%; border-collapse:collapse; margin-top:.5rem; }
+    .table-compact th, .table-compact td{ padding:.5rem .6rem; text-align:left; border-bottom:1px solid rgba(0,0,0,0.04); }
+    .table-compact th{ font-weight:600; font-size:.9rem; color:var(--muted); }
+    footer{ padding:1rem 0; color:var(--muted); font-size:.9rem; text-align:center; }
+  </style>
+</head>
+<body>
 
-{% block title %}Hello ListeVMController!{% endblock %}
+  {# barre de navigation avec nom / menu utilisateur #}
+  {% include 'partials/_navbar.html.twig' %}
 
-{% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+  <main class="page">
+    <div class="container">
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+      <section class="block">
+        <div class="controls">
+          <div class="left">
+            <hgroup>
+              <h2 style="margin:.15rem 0 0 0;">Machines distantes</h2>
+              <p style="margin:0;color:var(--muted);font-size:.95rem">Liste simulée des VM disponibles — actions non fonctionnelles (interface uniquement).</p>
+            </hgroup>
+          </div>
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>C:/Users/simon/Desktop/Perso/cours/Admin_sys/ManageVMFront/src/Controller/ListeVMController.php</code></li>
-        <li>Your template at <code>C:/Users/simon/Desktop/Perso/cours/Admin_sys/ManageVMFront/templates/liste_vm/index.html.twig</code></li>
-    </ul>
-</div>
-{% endblock %}
+          <div class="right">
+            <form class="search" onsubmit="event.preventDefault()">
+              <label for="q" class="visually-hidden">Rechercher</label>
+              <input id="q" type="search" placeholder="Rechercher (nom, IP, OS)" />
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="vm-grid">
+        <article class="vm-card">
+          <div class="vm-header">
+            <div>
+              <strong>vm-web-01</strong>
+              <div class="vm-meta">Web • <span style="font-weight:600">192.168.0.101</span></div>
+            </div>
+            <div class="status up">EN LIGNE</div>
+          </div>
+          <div class="vm-body">
+            <dl class="specs">
+              <dt>OS</dt><dd>Debian 12 (amd64)</dd>
+              <dt>CPU / RAM</dt><dd>4 vCPU • 8 GB</dd>
+              <dt>Uptime</dt><dd>3 j 12 h</dd>
+            </dl>
+            <div class="actions">
+              <button class="btn" disabled>Console</button>
+              <button class="btn" disabled>SSH</button>
+              <button class="btn" disabled>Redémarrer</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="vm-card">
+          <div class="vm-header">
+            <div>
+              <strong>db-primary</strong>
+              <div class="vm-meta">Base • <span style="font-weight:600">192.168.0.20</span></div>
+            </div>
+            <div class="status up">EN LIGNE</div>
+          </div>
+          <div class="vm-body">
+            <dl class="specs">
+              <dt>OS</dt><dd>Ubuntu 22.04 LTS</dd>
+              <dt>CPU / RAM</dt><dd>8 vCPU • 16 GB</dd>
+              <dt>Disque</dt><dd>1.5 TB SSD</dd>
+            </dl>
+            <div class="actions">
+              <button class="btn" disabled>Console</button>
+              <button class="btn" disabled>Backup</button>
+              <button class="btn" disabled>Failover</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="vm-card">
+          <div class="vm-header">
+            <div>
+              <strong>build-agent-07</strong>
+              <div class="vm-meta">CI • <span style="font-weight:600">10.0.5.7</span></div>
+            </div>
+            <div class="status warn">CHARGÉ</div>
+          </div>
+          <div class="vm-body">
+            <dl class="specs">
+              <dt>OS</dt><dd>Fedora 39</dd>
+              <dt>CPU / RAM</dt><dd>16 vCPU • 32 GB</dd>
+              <dt>Jobs</dt><dd>4 actifs</dd>
+            </dl>
+            <div class="actions">
+              <button class="btn" disabled>Console</button>
+              <button class="btn" disabled>Mettre en pause</button>
+              <button class="btn" disabled>Logs</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="vm-card">
+          <div class="vm-header">
+            <div>
+              <strong>test-win-02</strong>
+              <div class="vm-meta">Tests • <span style="font-weight:600">10.0.8.22</span></div>
+            </div>
+            <div class="status down">HORS LIGNE</div>
+          </div>
+          <div class="vm-body">
+            <dl class="specs">
+              <dt>OS</dt><dd>Windows Server 2019</dd>
+              <dt>Dernier contact</dt><dd>il y a 2 h</dd>
+              <dt>Maintenance</dt><dd>Planifiée</dd>
+            </dl>
+            <div class="actions">
+              <button class="btn" disabled>Console</button>
+              <button class="btn" disabled>Power On</button>
+              <button class="btn" disabled>Rapport</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="vm-card">
+          <div class="vm-header">
+            <div>
+              <strong>backup-nas</strong>
+              <div class="vm-meta">Stockage • <span style="font-weight:600">192.168.0.150</span></div>
+            </div>
+            <div class="status up">EN LIGNE</div>
+          </div>
+          <div class="vm-body">
+            <dl class="specs">
+              <dt>OS</dt><dd>FreeBSD 13</dd>
+              <dt>Capacité</dt><dd>6 TB / 8 TB utilisé</dd>
+              <dt>Dernier snapshot</dt><dd>hier 22:10</dd>
+            </dl>
+            <div class="actions">
+              <button class="btn" disabled>Console</button>
+              <button class="btn" disabled>Snapshot</button>
+              <button class="btn" disabled>Synchroniser</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="vm-card">
+          <div class="vm-header">
+            <div>
+              <strong>edge-gateway</strong>
+              <div class="vm-meta">Réseau • <span style="font-weight:600">203.0.113.12</span></div>
+            </div>
+            <div class="status up">EN LIGNE</div>
+          </div>
+          <div class="vm-body">
+            <dl class="specs">
+              <dt>OS</dt><dd>VyOS 1.4</dd>
+              <dt>Throughput</dt><dd>2.4 Gbps</dd>
+              <dt>Alerts</dt><dd>0</dd>
+            </dl>
+            <div class="actions">
+              <button class="btn" disabled>Console</button>
+              <button class="btn" disabled>SSH</button>
+              <button class="btn" disabled>Routes</button>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="block">
+        <h3 style="margin-top:0">Vue compacte</h3>
+        <table class="table-compact" aria-label="Liste compacte des VM">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>IP</th>
+              <th>OS</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>vm-web-01</td>
+              <td>192.168.0.101</td>
+              <td>Debian 12</td>
+              <td><span class="status up" style="display:inline-block;padding:.2rem .5rem;border-radius:8px;font-size:.8rem;">EN LIGNE</span></td>
+              <td><button class="btn" disabled>Console</button></td>
+            </tr>
+            <tr>
+              <td>db-primary</td>
+              <td>192.168.0.20</td>
+              <td>Ubuntu 22.04</td>
+              <td><span class="status up" style="display:inline-block;padding:.2rem .5rem;border-radius:8px;font-size:.8rem;">EN LIGNE</span></td>
+              <td><button class="btn" disabled>Backup</button></td>
+            </tr>
+            <tr>
+              <td>test-win-02</td>
+              <td>10.0.8.22</td>
+              <td>Windows Server 2019</td>
+              <td><span class="status down" style="display:inline-block;padding:.2rem .5rem;border-radius:8px;font-size:.8rem;">HORS LIGNE</span></td>
+              <td><button class="btn" disabled>Power On</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+    </div>
+  </main>
+
+  <footer>Affichage simulé • Actions désactivées — Interface basée sur Pico.css</footer>
+</body>
+</html>

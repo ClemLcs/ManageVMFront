@@ -1,0 +1,44 @@
+<header>
+  <nav>
+    <ul>
+      <li>
+        <a href="{{ path('app_home') }}" style="display:inline-block;">
+          <img src="https://www.nomadindesign.com/wp-content/uploads/2014/04/logo-moche.png"
+               alt="Logo VM"
+               style="height:80px; vertical-align:middle;">
+        </a>
+      </li>
+      <li><a href="{{ path('app_liste_v_m') }}">Liste des VM</a></li>
+    </ul>
+
+    <ul style="margin-left:auto;">
+      {% if app.user %}
+        {% set display_name = (app.user.firstName|default('')|slice(0,1)|upper) ~ ' ' ~ (app.user.lastName|default('')) %}
+        <details class="dropdown">
+          <summary role="button" class="secondary">
+            {{ display_name }}
+          </summary>
+          <ul class="dropdown-menu" style="right:0;">
+            <li><a href="/account">Espace membre</a></li>
+            <li><a href="{{ path('app_logout') }}">Se déconnecter</a></li>
+          </ul>
+        </details>
+      {% else %}
+        <li><a role="button" class="secondary" href="{{ path('app_connection') }}">Se connecter</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+</header>
+
+<style>
+  header {
+    position: sticky; top: 0; z-index: 1000;
+    background-color: rgba(240, 240, 240, 0.7);
+    backdrop-filter: blur(4px);
+    border-bottom: 1px solid rgba(0,0,0,.05);
+  }
+  header nav { max-width: 1000px; margin: 0 auto; padding: .5rem 1rem; }
+  /* Aligne le dropdown à droite et corrige l’overflow */
+  details.dropdown { position: relative; }
+  .dropdown-menu { position: absolute; right: 0; }
+</style>

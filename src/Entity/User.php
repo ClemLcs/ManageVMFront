@@ -1,5 +1,7 @@
 <?php
 
+// Totalement inutile car remplacé par User2.php
+
 namespace App\Entity;
 
 use App\Repository\UserRepository;
