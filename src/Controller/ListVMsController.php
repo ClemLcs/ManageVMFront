@@ -8,7 +8,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class ListVMsController extends AbstractController
 {
-    #[Route('/list/v/ms', name: 'app_list_v_ms')]
+    #[Route('/list/vms', name: 'app_list_vms')]
     public function index(): Response
     {
         // Example VM data - in a real app you'd fetch this from the database or an API
