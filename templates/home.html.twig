@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>VM - Accueil</title>
+  <meta name="description" content="Description VM" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css" />
+  <style>
+    body { min-height: 100dvh; display: flex; flex-direction: column; }
+    main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+    section { text-align: center; display: flex; flex-direction: column; gap: 1.5rem; width: min(480px, 100%); }
+    .nav-links a {
+      display: block; margin: .5rem 0; padding: .75rem 1rem; border-radius: .5rem; text-decoration: none; font-weight: 500;
+      background: var(--pico-card-background-color); box-shadow: var(--pico-card-box-shadow);
+    }
+    .nav-links a:hover { background: var(--pico-primary); color: #fff; }
+  </style>
+</head>
+<body>
+
+  {% include 'partials/_navbar.html.twig' %}
+
+  <main>
+    <section>
+      <h1>Bienvenue sur le portail VM</h1>
+      <p>Liste des pages actuelles :</p>
+      <div class="nav-links">
+        <a href="{{ path('app_connection') }}">Se connecter</a>
+        <a href="{{ path('app_register') }}">Créer un compte</a>
+        <a href="{{ path('app_liste_v_m') }}">Liste des machines virtuelles</a>
+        <a href="{{ path('app_forgeten_password') }}">Mot de passe oublié</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

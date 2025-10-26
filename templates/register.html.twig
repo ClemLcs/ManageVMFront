@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>VM - S'inscrire</title>
+  <meta name="description" content="Il faut se connecter, c'est tout" />
+
+  <!-- Base : Pico.css -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css" />
+
+  <style>
+    /* Bandeau fixe légèrement plus clair */
+    header {
+      position: sticky; top: 0; z-index: 1000;
+      background-color: rgba(240, 240, 240, 0.7);
+      backdrop-filter: blur(4px);
+      border-bottom: 1px solid rgba(0,0,0,.05);
+    }
+
+    .name-row {
+      display: flex;         
+      gap: .75rem;            
+    }
+
+    @media (max-width: 480px) {
+      .name-row { flex-direction: column; }
+    }
+
+    header nav { max-width: 1000px; margin: 0 auto; padding: .5rem 1rem; }
+
+    /* Page en flex, centre le bloc principal */
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    main.page {
+      flex: 1;                      /* prend la hauteur restante */
+      display: flex;
+      align-items: center;          /* centre verticalement */
+      justify-content: center;      /* centre horizontalement */
+      padding: 2rem 1rem;
+    }
+
+    /* Bloc central (colonne) */
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;              
+      width: min(680px, 100%);
+    }
+
+    /* Sous-blocs de blabla */
+    .block {
+      padding: 1rem 1.25rem;
+      border-radius: .5rem;
+      background: var(--pico-card-background-color);
+      box-shadow: var(--pico-card-box-shadow);
+    }
+    .block h2 { margin: 0 0 .5rem 0; }
+
+    /* Formulaire */
+    form .actions {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+
+    /* Les alternatives (git) */
+    .cta {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    /* Option: resserrer visuel sur écrans larges - GPT proposé ¯\_(ツ)_/¯ */
+    @media (min-width: 960px) {
+      .content { gap: 1.5rem; }
+      .block  { padding: 1.25rem 1.5rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav>
+    <ul>
+      <li>
+        <a href="/" style="display:inline-block;">
+          <img src="https://www.nomadindesign.com/wp-content/uploads/2014/04/logo-moche.png"
+               alt="Logo VM"
+               style="height:80px; vertical-align:middle;">
+        </a>
+      </li>
+
+      <details class="dropdown">
+        <summary role="button" class="secondary">Accueil</summary>
+        <ul class="dropdown-menu">
+          <li><a href="/liste/v/m">Liste des VM</a></li>
+          <li><a href="/connection">Se connecter</a></li>
+        </ul>
+      </details>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="content">
+      {# Bloc texte  #}
+      <article class="block">
+        <h2>S'inscrire</h2>
+        <p>Inscrivez-vous pour un compte <strong>gratuit </strong>.</p>
+      </article>
+
+    <article class="block">
+    {% block body %}
+      {% for flash_error in app.flashes('verify_email_error') %}
+          <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
+      {% endfor %}
+
+
+      {{ form_errors(registrationForm) }}
+
+      {{ form_start(registrationForm) }}
+          
+          <div class="name-row">
+              {{ form_row(registrationForm.firstName) }}
+              {{ form_row(registrationForm.lastName) }}
+          </div>
+
+          {{ form_row(registrationForm.email) }}
+          {{ form_row(registrationForm.plainPassword, {
+              label: 'Password'
+          })}}
+
+          <button type="submit" class="btn">Register</button>
+      {{ form_end(registrationForm) }}
+    {% endblock %}
+      </article>
+
+
+    </section>
+  </main>
+
+</body>
+</html>
+
+
