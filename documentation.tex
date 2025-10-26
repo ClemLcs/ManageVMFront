@@ -1,0 +1,699 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{float}
+
+% Configuration de la page
+\geometry{
+    top=2.5cm,
+    bottom=2.5cm,
+    left=3cm,
+    right=2.5cm
+}
+
+% Configuration des liens
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={VMManager - CreateVM \& DetailsVM},
+    pdfpagemode=FullScreen,
+}
+
+% Configuration des listings de code
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=10pt,
+    backgroundcolor=\color{white},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    rulecolor=\color{black},
+    tabsize=2,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    title=\lstname,
+    escapeinside={\%*}{*)},
+    morekeywords={*,...}
+}
+
+% En-têtes et pieds de page
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{VMManager - CreateVM \& DetailsVM}
+\fancyfoot[C]{\thepage}
+
+% Couleurs personnalisées
+\definecolor{primaryblue}{RGB}{33,150,243}
+\definecolor{darkblue}{RGB}{13,71,161}
+\definecolor{lightgray}{RGB}{245,245,245}
+
+% Style des titres
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries\color{darkblue}}
+{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+
+\titleformat{\section}
+{\normalfont\Large\bfseries\color{primaryblue}}
+{\thesection}{1em}{}
+
+% Boîtes colorées
+\newtcolorbox{infobox}{
+    colback=blue!5!white,
+    colframe=blue!75!black,
+    title=Information
+}
+
+\newtcolorbox{warningbox}{
+    colback=orange!5!white,
+    colframe=orange!75!black,
+    title=Attention
+}
+
+\newtcolorbox{successbox}{
+    colback=green!5!white,
+    colframe=green!75!black,
+    title=Succès
+}
+
+% Début du document
+\begin{document}
+
+% ============================================================
+% PAGE DE GARDE
+% ============================================================
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge\bfseries VMManager - CreateVM\par}
+    \vspace{0.5cm}
+    {\Large Fonctionnalité de Création de Machines Virtuelles\par}
+    
+    \vspace{2cm}
+    
+    {\LARGE\bfseries Documentation Technique\par}
+    {\Large Interface de Création et Détails de VMs Proxmox\par}
+    
+    \vspace{3cm}
+    
+    \begin{tabular}{rl}
+        \textbf{Formation :} & EPSI - Administration Réseaux \\
+        \textbf{Année :} & 2025-2026 \\
+        \textbf{Fonctionnalité :} & CreateVM \\
+        \textbf{Technologies :} & Symfony 7, PHP 8.2, JavaScript, Proxmox VE \\
+    \end{tabular}
+    
+    \vfill
+    
+    {\large \today\par}
+\end{titlepage}
+
+% ============================================================
+% TABLE DES MATIÈRES
+% ============================================================
+\tableofcontents
+\newpage
+
+% ============================================================
+% CHAPITRE 1 : PRÉSENTATION DES FONCTIONNALITÉS
+% ============================================================
+\chapter{Présentation de la Fonctionnalité CreateVM}
+
+\section{Contexte et Objectifs}
+
+\subsection{Contexte}
+
+La fonctionnalité \textbf{CreateVM} constitue le cœur de la plateforme VMManager, permettant la création de nouvelles machines virtuelles sur une infrastructure Proxmox VE.
+
+Cette fonctionnalité répond au besoin critique de provisionnement rapide et automatisé de ressources virtuelles dans un environnement d'entreprise.
+
+\subsection{Objectifs de la Fonctionnalité}
+
+Les objectifs principaux sont :
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{Interface intuitive} : Formulaire moderne pour la création de VMs
+    \item \textbf{Configuration flexible} : Ressources personnalisables (CPU, RAM, disque)
+    \item \textbf{Validation robuste} : Contrôles côté client et serveur
+    \item \textbf{Intégration Proxmox} : Communication transparente avec l'infrastructure
+    \item \textbf{Expérience utilisateur} : Processus de création fluide et rapide
+\end{itemize}
+
+\subsection{Architecture des Modes}
+
+L'application fonctionne selon deux modes distincts :
+
+\begin{center}
+\begin{tikzpicture}[node distance=2cm]
+    % Nodes
+    \node[draw, rectangle, fill=blue!20, minimum width=4cm, minimum height=1cm] (demo) {Mode Démonstration};
+    \node[draw, rectangle, fill=green!20, minimum width=4cm, minimum height=1cm, right of=demo, xshift=3cm] (dynamic) {Mode Dynamique};
+    
+    % Sub-nodes for demo
+    \node[draw, rectangle, fill=blue!10, minimum width=3cm, minimum height=0.8cm, below of=demo, yshift=-0.5cm] (demo-data) {Données statiques};
+    \node[draw, rectangle, fill=blue!10, minimum width=3cm, minimum height=0.8cm, below of=demo-data] (demo-ui) {Interface complète};
+    
+    % Sub-nodes for dynamic
+    \node[draw, rectangle, fill=green!10, minimum width=3cm, minimum height=0.8cm, below of=dynamic, yshift=-0.5cm] (dynamic-api) {API Backend};
+    \node[draw, rectangle, fill=green!10, minimum width=3cm, minimum height=0.8cm, below of=dynamic-api] (dynamic-real) {Données temps réel};
+    
+    % Arrows
+    \draw[->, thick] (demo) -- node[above] {Migration} (dynamic);
+\end{tikzpicture}
+\end{center}
+
+% ============================================================
+% CHAPITRE 2 : MODE DÉMONSTRATION
+% ============================================================
+\chapter{Mode Démonstration}
+
+\section{Présentation du Mode Démonstration}
+
+\subsection{Caractéristiques}
+
+Le mode démonstration utilise des \textbf{données statiques} intégrées directement dans le contrôleur PHP pour permettre une démonstration immédiate des fonctionnalités sans dépendance d'un serveur backend.
+
+\begin{infobox}
+\textbf{Avantages du mode démonstration :}
+\begin{itemize}
+    \item Démonstration immédiate des fonctionnalités
+    \item Aucune configuration serveur requise
+    \item Interface complète et fonctionnelle
+    \item Parfait pour les présentations
+\end{itemize}
+\end{infobox}
+
+\subsection{Comportement sans Serveur Backend}
+
+En mode dynamique sans serveur backend, l'application affiche un \textbf{loader qui tourne indéfiniment}, car :
+
+\begin{itemize}
+    \item Les appels API échouent (serveur non disponible)
+    \item Le JavaScript tente de se connecter en boucle
+    \item L'interface reste en état de chargement
+    \item Aucune donnée n'est affichée
+\end{itemize}
+
+\begin{warningbox}
+\textbf{Problème du mode dynamique sans backend :}
+Sans serveur API, l'application reste bloquée sur l'écran de chargement avec un spinner qui tourne sans fin, rendant l'interface inutilisable.
+\end{warningbox}
+
+\section{Implémentation du Mode Démonstration}
+
+\subsection{Contrôleur avec Données Statiques}
+
+\begin{lstlisting}[language=PHP, caption=Contrôleur en mode démonstration]
+#[Route('/vm/{vmid}', name: 'app_vm_details')]
+public function details(int $vmid): Response
+{
+    // Données VM en dur pour la démonstration
+    $vmData = [
+        'vmid' => $vmid,
+        'name' => 'web-01',
+        'status' => 'running',
+        'node' => 'proxmox-01',
+        'cpus' => 2,
+        'maxmem' => 4294967296, // 4GB en bytes
+        'mem' => 2147483648, // 2GB utilisés
+        'maxdisk' => 53687091200, // 50GB en bytes
+        'disk' => 10737418240, // 10GB utilisés
+        'uptime' => 86400, // 1 jour en secondes
+        'cpu' => 0.25, // 25% CPU
+        'netin' => 104857600, // 100MB
+        'netout' => 52428800, // 50MB
+    ];
+
+    // Données des snapshots en dur
+    $snapshots = [
+        [
+            'name' => 'snapshot-2025-10-15-01',
+            'snaptime' => 1728990600,
+            'description' => 'Avant mise à jour système',
+            'size' => 2684354560
+        ],
+        // ... autres snapshots
+    ];
+
+    // Données des événements en dur
+    $events = [
+        [
+            'date' => '15/10/2025 14:23',
+            'type' => 'info',
+            'message' => 'VM démarrée',
+            'user' => 'admin'
+        ],
+        // ... autres événements
+    ];
+
+    return $this->render('vm/details.html.twig', [
+        'vm' => $vmData,
+        'snapshots' => $snapshots,
+        'events' => $events,
+    ]);
+}
+\end{lstlisting}
+
+\subsection{Template Simplifié}
+
+\begin{lstlisting}[language=HTML, caption=Template en mode démonstration]
+<!-- Affichage direct des données statiques -->
+<div class="vm-info-card">
+    <h1>{{ vm.name }}</h1>
+    <span class="vm-status-badge {{ vm.status }}">
+        {% if vm.status == 'running' %}● En cours{% else %}● Arrêtée{% endif %}
+    </span>
+    <div class="vm-specs">
+        <div class="vm-spec-item">
+            <div class="vm-spec-label">Node</div>
+            <div class="vm-spec-value">{{ vm.node }}</div>
+        </div>
+        <!-- ... autres informations -->
+    </div>
+</div>
+
+<!-- Données des snapshots -->
+{% for snapshot in snapshots %}
+<tr>
+    <td><strong>{{ snapshot.name }}</strong></td>
+    <td>{{ snapshot.snaptime|date('d/m/Y H:i') }}</td>
+    <td>{{ snapshot.description }}</td>
+</tr>
+{% endfor %}
+\end{lstlisting}
+
+% ============================================================
+% CHAPITRE 3 : FONCTIONNALITÉ CREATEVM
+% ============================================================
+\chapter{Fonctionnalité CreateVM}
+
+\section{Interface de Création}
+
+\subsection{Formulaire en 3 Sections}
+
+La page de création propose un formulaire structuré :
+
+\subsubsection{Section 1 : Informations Générales}
+
+\begin{itemize}
+    \item \textbf{Nom de la VM} : Champ texte obligatoire
+    \item \textbf{Système d'exploitation} : Sélection visuelle parmi 6 options :
+    \begin{itemize}
+        \item Ubuntu 22.04 (🐧)
+        \item Debian 12 (🌀)
+        \item CentOS 9 (🔴)
+        \item Windows Server (🪟)
+        \item Alpine Linux (🏔️)
+        \item Custom ISO (⚙️)
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Section 2 : Configuration des Ressources}
+
+Configuration via des cartes interactives avec sliders :
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Ressource} & \textbf{Minimum} & \textbf{Maximum} & \textbf{Défaut} \\ \midrule
+CPU (vCPU) & 1 & 16 & 2 \\
+RAM (GB) & 1 & 64 & 4 \\
+Disque (GB) & 10 & 500 & 32 \\ \bottomrule
+\end{tabular}
+\caption{Configuration des ressources CreateVM}
+\end{table}
+
+\subsubsection{Section 3 : Configuration Réseau}
+
+\begin{itemize}
+    \item \textbf{Bridge réseau} : vmbr0, vmbr1, vmbr2, vmbr3
+    \item \textbf{Adresse IP} : DHCP automatique ou IP statique
+\end{itemize}
+
+\subsection{Récapitulatif Dynamique}
+
+Affichage en temps réel de la configuration sélectionnée :
+
+\begin{itemize}
+    \item OS sélectionné avec icône
+    \item Configuration CPU/RAM/Disque
+    \item Paramètres réseau
+\end{itemize}
+
+% ============================================================
+% CHAPITRE 4 : IMPLÉMENTATION TECHNIQUE
+% ============================================================
+\chapter{Implémentation Technique}
+
+\section{Architecture Frontend}
+
+\subsection{Structure des Fichiers}
+
+\begin{lstlisting}[language=bash, caption=Structure des fichiers CreateVM]
+templates/vm/
+└── create.html.twig          # Template principal
+src/Controller/
+└── ListVMsController.php     # Route /vm/create
+assets/
+├── app.js                     # Logique JavaScript
+└── styles/
+    └── app.css               # Styles personnalisés
+\end{lstlisting}
+
+\subsection{Contrôleur Symfony}
+
+\begin{lstlisting}[language=PHP, caption=Route de création de VM]
+#[Route('/vm/create', name: 'app_vm_create')]
+public function create(): Response
+{
+    return $this->render('vm/create.html.twig');
+}
+\end{lstlisting}
+
+\section{Validation JavaScript}
+
+\subsection{Validation des Champs}
+
+\begin{lstlisting}[language=JavaScript, caption=Validation du formulaire]
+function validateForm() {
+    const name = document.getElementById('vm-name').value;
+    const os = document.getElementById('vm-os').value;
+    const cpu = parseInt(document.getElementById('vm-cpu').value);
+    const ram = parseInt(document.getElementById('vm-ram').value);
+    const disk = parseInt(document.getElementById('vm-disk').value);
+    const bridge = document.getElementById('vm-bridge').value;
+    
+    // Validation du nom
+    if (!name || name.length < 3) {
+        showError('Le nom de la VM doit contenir au moins 3 caractères');
+        return false;
+    }
+    
+    // Validation des ressources
+    if (cpu < 1 || cpu > 16) {
+        showError('Le nombre de CPU doit être entre 1 et 16');
+        return false;
+    }
+    
+    if (ram < 1 || ram > 64) {
+        showError('La RAM doit être entre 1 et 64 GB');
+        return false;
+    }
+    
+    if (disk < 10 || disk > 500) {
+        showError('L\'espace disque doit être entre 10 et 500 GB');
+        return false;
+    }
+    
+    return true;
+}
+\end{lstlisting}
+
+% ============================================================
+% CHAPITRE 5 : MIGRATION VERS LE MODE DYNAMIQUE
+% ============================================================
+\chapter{Migration vers le Mode Dynamique}
+
+\section{Préparation du Mode Dynamique}
+
+\subsection{Architecture Prête}
+
+L'application est conçue pour supporter facilement le passage au mode dynamique :
+
+\begin{itemize}
+    \item \textbf{Service API JavaScript} : Déjà implémenté
+    \item \textbf{Endpoints backend} : Structure préparée
+    \item \textbf{Gestion JWT} : Authentification prête
+    \item \textbf{Flux d'événements} : SSE configuré
+\end{itemize}
+
+\subsection{Composants à Activer}
+
+\begin{enumerate}
+    \item \textbf{Service API} : Décommenter le code JavaScript
+    \item \textbf{Backend API} : Démarrer le serveur backend
+    \item \textbf{Configuration} : Variables d'environnement
+    \item \textbf{Authentification} : Gestion des tokens JWT
+\end{enumerate}
+
+\section{Étapes de Migration}
+
+\subsection{1. Configuration Backend}
+
+\begin{lstlisting}[language=bash, caption=Configuration environnement]
+# Variables d'environnement
+API_BASE_URL=http://localhost:8001
+JWT_SECRET=your-secret-key
+PROXMOX_HOST=192.168.1.100
+PROXMOX_USER=root@pam
+PROXMOX_PASSWORD=your-password
+\end{lstlisting}
+
+\subsection{2. Modification du Contrôleur}
+
+\begin{lstlisting}[language=PHP, caption=Contrôleur en mode dynamique]
+#[Route('/vm/{vmid}', name: 'app_vm_details')]
+public function details(int $vmid): Response
+{
+    // Mode dynamique : données via API
+    return $this->render('vm/details.html.twig', [
+        'vmid' => $vmid,
+        'api_base_url' => $_ENV['API_BASE_URL'] ?? 'http://localhost:8001',
+    ]);
+}
+\end{lstlisting}
+
+\subsection{3. Activation du JavaScript}
+
+\begin{lstlisting}[language=HTML, caption=Template en mode dynamique]
+<!-- Décommenter les sections JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const VMID = {{ vmid }};
+const API_BASE_URL = '{{ api_base_url }}';
+const api = new ApiService(API_BASE_URL);
+
+// Chargement des données via API
+async function loadVMData() {
+    try {
+        const vmResponse = await api.getVMs();
+        const vm = vmResponse.data.find(v => v.vmid === VMID);
+        
+        if (vm) {
+            updateVMInfo(vm);
+            await loadSnapshots();
+            initializeCharts(vm);
+            connectEventStream();
+        }
+    } catch (error) {
+        console.error('Erreur chargement données:', error);
+    }
+}
+
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', loadVMData);
+</script>
+\end{lstlisting}
+
+\subsection{4. Service API Backend}
+
+\begin{lstlisting}[language=PHP, caption=Endpoints API backend]
+#[Route('/api/v1/vms', methods: ['GET'])]
+public function getVMs(): JsonResponse
+{
+    $vms = $this->proxmoxService->getAllVMs();
+    return $this->json(['success' => true, 'data' => $vms]);
+}
+
+#[Route('/api/v1/vms/{vmid}', methods: ['GET'])]
+public function getVM(int $vmid): JsonResponse
+{
+    $vm = $this->proxmoxService->getVM($vmid);
+    return $this->json(['success' => true, 'data' => $vm]);
+}
+
+#[Route('/api/v1/vms/{vmid}/start', methods: ['POST'])]
+public function startVM(int $vmid): JsonResponse
+{
+    $result = $this->proxmoxService->startVM($vmid);
+    return $this->json(['success' => $result]);
+}
+\end{lstlisting}
+
+\section{Avantages du Mode Dynamique}
+
+\subsection{Fonctionnalités Activées}
+
+\begin{itemize}
+    \item \textbf{Données temps réel} : Métriques actualisées automatiquement
+    \item \textbf{Actions interactives} : Démarrage/arrêt des VMs
+    \item \textbf{Graphiques dynamiques} : Évolution des performances
+    \item \textbf{Événements en direct} : Flux SSE des opérations
+    \item \textbf{Gestion des snapshots} : Création et restauration
+\end{itemize}
+
+\subsection{Performance et Monitoring}
+
+\begin{itemize}
+    \item \textbf{Temps de réponse} : < 2 secondes
+    \item \textbf{Mise à jour automatique} : Toutes les 5 secondes
+    \item \textbf{Gestion d'erreurs} : Retry automatique
+    \item \textbf{Authentification} : JWT avec renouvellement
+\end{itemize}
+
+% ============================================================
+% CHAPITRE 6 : COMPARAISON DES MODES
+% ============================================================
+\chapter{Comparaison des Modes}
+
+\section{Tableau Comparatif}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}p{3cm}p{6cm}p{6cm}@{}}
+\toprule
+\textbf{Aspect} & \textbf{Mode Démonstration} & \textbf{Mode Dynamique} \\ \midrule
+Données & Statiques (PHP) & Temps réel (API) \\
+Configuration & Aucune & Backend requis \\
+Performance & Instantanée & Dépendante réseau \\
+Fonctionnalités & Affichage uniquement & Actions complètes \\
+Démonstration & Parfaite & Complète \\
+Production & Non adapté & Recommandé \\
+Maintenance & Minimale & Standard \\
+Évolutivité & Limitée & Totale \\ \bottomrule
+\end{tabular}
+\caption{Comparaison des modes de fonctionnement}
+\end{table}
+
+\section{Recommandations}
+
+\subsection{Mode Démonstration}
+
+\textbf{Utilisation recommandée :}
+\begin{itemize}
+    \item Présentations et démonstrations
+    \item Développement d'interface
+    \item Tests de design
+    \item Formation utilisateurs
+\end{itemize}
+
+\subsection{Mode Dynamique}
+
+\textbf{Utilisation recommandée :}
+\begin{itemize}
+    \item Environnement de production
+    \item Gestion réelle des VMs
+    \item Monitoring en continu
+    \item Intégration avec infrastructure
+\end{itemize}
+
+% ============================================================
+% CHAPITRE 7 : GUIDE DE MIGRATION
+% ============================================================
+\chapter{Guide de Migration}
+
+\section{Checklist de Migration}
+
+\subsection{Prérequis}
+
+\begin{enumerate}
+    \item \textbf{Serveur backend} : API Symfony configurée
+    \item \textbf{Proxmox VE} : Infrastructure accessible
+    \item \textbf{Authentification} : JWT configuré
+    \item \textbf{Réseau} : Communication frontend/backend
+\end{enumerate}
+
+\subsection{Étapes de Migration}
+
+\begin{enumerate}
+    \item \textbf{Configuration environnement} : Variables d'API
+    \item \textbf{Modification contrôleur} : Suppression données statiques
+    \item \textbf{Activation JavaScript} : Décommenter le code
+    \item \textbf{Test des fonctionnalités} : Vérification complète
+    \item \textbf{Déploiement} : Mise en production
+\end{enumerate}
+
+\section{Script de Migration}
+
+\begin{lstlisting}[language=bash, caption=Script de migration automatique]
+#!/bin/bash
+
+echo "=== Migration vers le mode dynamique ==="
+
+# 1. Configuration environnement
+echo "Configuration des variables d'environnement..."
+cp .env.example .env
+echo "API_BASE_URL=http://localhost:8001" >> .env
+
+# 2. Modification du contrôleur
+echo "Modification du contrôleur..."
+sed -i 's/\/\/ Mode démonstration/Mode dynamique/g' src/Controller/ListVMsController.php
+
+# 3. Activation du JavaScript
+echo "Activation du JavaScript..."
+sed -i 's/<!-- <script>/<script>/g' templates/vm/details.html.twig
+sed -i 's/<\/script> -->/<\/script>/g' templates/vm/details.html.twig
+
+# 4. Test des fonctionnalités
+echo "Test des fonctionnalités..."
+php bin/console cache:clear
+
+echo "=== Migration terminée ==="
+\end{lstlisting}
+
+% ============================================================
+% CONCLUSION
+% ============================================================
+\chapter{Conclusion}
+
+\section{Bilan des Fonctionnalités}
+
+Les fonctionnalités \textbf{CreateVM} et \textbf{DetailsVM} offrent :
+
+\begin{itemize}
+    \item \textbf{Mode démonstration} : Interface complète avec données statiques
+    \item \textbf{Mode dynamique} : Fonctionnalités temps réel avec API backend
+    \item \textbf{Migration facile} : Passage simple entre les modes
+    \item \textbf{Architecture flexible} : Adaptation aux besoins
+\end{itemize}
+
+\section{Perspectives d'Évolution}
+
+\begin{itemize}
+    \item \textbf{Mode hybride} : Combinaison des deux approches
+    \item \textbf{Cache intelligent} : Optimisation des performances
+    \item \textbf{Offline mode} : Fonctionnement sans connexion
+    \item \textbf{API avancée} : Endpoints supplémentaires
+\end{itemize}
+
+\begin{successbox}
+Les fonctionnalités CreateVM et DetailsVM constituent une base solide pour la gestion de machines virtuelles, avec une architecture flexible permettant l'adaptation aux différents contextes d'utilisation.
+\end{successbox}
+
+\end{document}
